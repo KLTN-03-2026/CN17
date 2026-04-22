@@ -45,7 +45,7 @@ const getTasks = async (req, res) => {
                     _id: null,
                     all: { $sum: 1 },
                     pendingTasks: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, 1, 0] } },
-                    inProgressTasks: { $sum: { $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0] } },
+                    inProgressTasks: { $sum: { $cond: [{ $eq: ["$status", "in progress"] }, 1, 0] } },
                     completedTasks: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } }
                 }
             }

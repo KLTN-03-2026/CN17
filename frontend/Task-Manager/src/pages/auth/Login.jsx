@@ -87,7 +87,7 @@ const Login = () => {
             Đăng nhập
           </button>
           <p className="text-[13px] text-slate-800 mt-3">
-              Bạn không có tài khoản ??????? {" "}
+              Bạn không có tài khoản ? {" "}
           <Link className="font-medium text-primary underline" to = "/signup">
             Đăng ký
           </Link>

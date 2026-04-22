@@ -26,7 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);    
 
 // Server uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/upload", express.static(path.join(__dirname, "upload")));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server dang chay tren cong ${PORT}`));

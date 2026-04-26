@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from "react-router-dom";
-
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import LandingPage from "./pages/LandingPage";
+import BoxChatAI from "./components/BoxChatAI";
 // Auth
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
@@ -24,10 +25,12 @@ import { Toaster } from 'react-hot-toast';
 const App = () => {
   return (
     <UserProvider>
-      <>  
+      <>
         <div>
           <Router>
             <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
 
@@ -36,7 +39,7 @@ const App = () => {
                 <Route path="/admin/dashboard" element={<DashBoard />} />
                 <Route path="/admin/tasks" element={<ManagerTask />} />
                 <Route path="/admin/create-task" element={<CreateTask />} />
-               <Route path="/admin/users" element={<ManageUsers />} />
+                <Route path="/admin/users" element={<ManageUsers />} />
               </Route>
 
               {/* User routes */}
@@ -46,11 +49,12 @@ const App = () => {
                 <Route path="/user/task-details/:id" element={<TaskDetails />} />
               </Route>
 
-              {/* default route */}
-              <Route path="/" element={<Root />} /> 
+              {/* Fallback - redirect unknown routes to landing */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            <BoxChatAI />
           </Router>
-        </div> 
+        </div>
 
         <Toaster toastOptions={{
           className: "",
@@ -58,21 +62,9 @@ const App = () => {
             fontSize: "13px"
           },
         }} />
-      </> 
+      </>
     </UserProvider>
   );
 };
 
 export default App;
-
-const Root = () => {
-  const { user, loading } = useContext(UserContext);
-  if (loading) return <Outlet />;
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  return user.role === "admin"
-    ? <Navigate to="/admin/dashboard" />
-    : <Navigate to="/user/dashboard" />;
-};

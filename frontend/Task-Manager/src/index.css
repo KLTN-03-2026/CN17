@@ -1,17 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
-
 @import "tailwindcss";
 
 @theme {
-    --font-display: "Poppins", "sans-serif";
+    --font-display: "Poppins", sans-serif;
     --breakpoint-3xl: 1920px;
     --color-primary: #1368EC;
 }
 
 @layer base {
-    html {
-        font-family: var(--font-display);
+    html, body, * {
+        font-family: "Poppins", sans-serif;
     }
 
     body {
@@ -24,11 +23,14 @@
     @apply w-full flex justify-between gap-3 text-sm text-black bg-slate-100/50 rounded px-4 py-3 mb-4 mt-3 border border-slate-200 outline-none;
 }
 .btn-primary{
-    @apply w-full text-sm font-medium text-white bg-primary shadow-lg shadow-purple-600/5 p-[10px] rounded-md my-1 hover:bg-blue-600/15 hover:text-blue-600 cursor-pointer ;
+    @apply w-full text-sm font-medium text-white bg-primary shadow-lg shadow-purple-600/5 p-[10px] rounded-md my-1 hover:bg-blue-600/15 hover:text-blue-600 cursor-pointer;
+}
+.btn-secondary{
+    @apply w-full text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 p-[10px] rounded-md my-1 hover:bg-gray-100 cursor-pointer;
 }
 
 .card{
-    @apply  bg-white rounded-2xl shadow-gray-100 p-6 border border-gray-200/50; ;
+    @apply bg-white rounded-2xl shadow-gray-100 p-6 border border-gray-200/50;
 }
 .card-btn {
     @apply flex items-center gap-3 text-[12px] font-medium text-gray-700 hover:text-primary bg-gray-50 hover:bg-blue-50 px-4 py-1.5 rounded-lg border border-gray-200/50 cursor-pointer;
@@ -43,11 +45,11 @@
     @apply w-full text-sm text-black outline-none bg-white border border-slate-100 px-2.5 py-3 rounded-md mt-2 placeholder:text-gray-500;
 }
 .add-btn{
-    @apply w-full flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium text-primary whitespace-nowrap bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 cursor-pointer ;
+    @apply w-full flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium text-primary whitespace-nowrap bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 cursor-pointer;
 }
 .download-btn{
-    @apply flex items-center gap-3 text-xs md:text-[13px] text-lime-900 bg-lime-100 px-2 md:px-3 py-2 rounded border border-lime-200 hover:border-lime-400  cursor-pointer;
+    @apply flex items-center gap-3 text-xs md:text-[13px] text-lime-900 bg-lime-100 px-2 md:px-3 py-2 rounded border border-lime-200 hover:border-lime-400 cursor-pointer;
 }
 .user-card {
-    @apply bg-white p-4 rounded-xl shadow-md shadow-gray-100 border border-gray-200/50 ; 
+    @apply bg-white p-4 rounded-xl shadow-md shadow-gray-100 border border-gray-200/50;
 }

@@ -1,36 +1,34 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import DashBoardLayout from "../../components/layout/DashBoardLayout";
 import { useUserAuth } from "../../hooks/useUserAuth";
 import axiosInstance from "../../utils/axiosIntance";
 import { API_PATHS } from "../../utils/apiPaths";
 import TaskCard from "../../components/Cards/TaskCard";
 import TaskStatusTabs from "../../components/TaskStatusTabs";
-import { LuFolderOpen } from "react-icons/lu";
+import { LuPlus } from "react-icons/lu";
+import toast from "react-hot-toast";
 
-const MyTasks = () => {
+const LeaderTaskManager = () => {
     useUserAuth();
-    const navigate = useNavigate();
+    const { projectId } = useParams();
+    const navigate      = useNavigate();
 
-    const [projects, setProjects]               = useState([]);
-    const [selectedProject, setSelectedProject] = useState(null);
-    const [allTasks, setAllTasks]               = useState([]);
-    const [tabs, setTabs]                       = useState([]);
-    const [filterStatus, setFilterStatus]       = useState("all");
+    const [project, setProject]           = useState(null);
+    const [allTasks, setAllTasks]         = useState([]);
+    const [tabs, setTabs]                 = useState([]);
+    const [filterStatus, setFilterStatus] = useState("all");
 
-    const fetchProjects = async () => {
+    const fetchProjectInfo = async () => {
         try {
-            const res = await axiosInstance.get(API_PATHS.PROJECTS.GET_MY_PROJECTS);
-            setProjects(res.data || []);
-            if ((res.data || []).length > 0) setSelectedProject(res.data[0]);
+            const res = await axiosInstance.get(API_PATHS.PROJECTS.GET_PROJECT_BY_ID(projectId));
+            setProject(res.data);
         } catch (error) {
-            console.error("Lỗi tải project:", error);
+            toast.error("Không thể tải thông tin dự án");
         }
     };
 
     const fetchTasks = useCallback(async () => {
-        if (!selectedProject) return;
-
         try {
             const status =
                 filterStatus === "all"         ? "" :
@@ -39,10 +37,10 @@ const MyTasks = () => {
 
             const [tasksRes, summaryRes] = await Promise.all([
                 axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
-                    params: { projectId: selectedProject._id, status },
+                    params: { projectId, status },
                 }),
                 axiosInstance.get(API_PATHS.TASKS.GET_ALL_TASKS, {
-                    params: { projectId: selectedProject._id, status: "" },
+                    params: { projectId, status: "" },
                 }),
             ]);
 
@@ -58,43 +56,28 @@ const MyTasks = () => {
         } catch (error) {
             console.error("Lỗi tải task:", error);
         }
-    }, [selectedProject, filterStatus]);
+    }, [projectId, filterStatus]);
 
     useEffect(() => {
-        fetchProjects();
-    }, []);
+        fetchProjectInfo();
+    }, [projectId]);
 
     useEffect(() => {
         fetchTasks();
     }, [fetchTasks]);
 
     return (
-        <DashBoardLayout activeMenu="My Tasks">
+        <DashBoardLayout activeMenu="Projects">
             <div className="my-5">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
-                    <h2 className="text-xl font-medium">My Tasks</h2>
+                    <div>
+                        <h2 className="text-xl font-medium">{project?.name || "Tasks"}</h2>
+                        {project?.description && (
+                            <p className="text-xs text-gray-400 mt-0.5">{project.description}</p>
+                        )}
+                    </div>
 
                     <div className="flex items-center gap-3 flex-wrap">
-                        {/* Project selector */}
-                        {projects.length > 1 && (
-                            <div className="flex items-center gap-2">
-                                <LuFolderOpen className="text-gray-400 shrink-0 text-sm" />
-                                <select
-                                    className="form-input text-sm py-1.5 pr-8"
-                                    value={selectedProject?._id || ""}
-                                    onChange={(e) => {
-                                        const p = projects.find((p) => p._id === e.target.value);
-                                        setSelectedProject(p);
-                                        setFilterStatus("all");
-                                    }}
-                                >
-                                    {projects.map((p) => (
-                                        <option key={p._id} value={p._id}>{p.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-
                         {tabs?.some((t) => t.count > 0) && (
                             <TaskStatusTabs
                                 tabs={tabs}
@@ -102,6 +85,14 @@ const MyTasks = () => {
                                 setActiveTab={setFilterStatus}
                             />
                         )}
+                        <button
+                            className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg cursor-pointer transition-colors"
+                            onClick={() =>
+                                navigate(`/leader/projects/${projectId}/tasks/create`)
+                            }
+                        >
+                            <LuPlus /> Tạo Task
+                        </button>
                     </div>
                 </div>
 
@@ -123,14 +114,25 @@ const MyTasks = () => {
                                     item.todoChecklist?.filter((t) => t.completed).length || 0
                                 }
                                 todoChecklist={item.todoChecklist || []}
-                                onClick={() => navigate(`/user/tasks/${item._id}`)}
+                                onClick={() =>
+                                    navigate(
+                                        `/leader/projects/${projectId}/tasks/create`,
+                                        { state: { taskID: item._id } }
+                                    )
+                                }
                             />
                         ))
                     ) : (
                         <div className="col-span-3 text-center text-gray-400 mt-10">
-                            {selectedProject
-                                ? "Không có task nào trong dự án này."
-                                : "Bạn chưa tham gia dự án nào."}
+                            <p className="text-sm mb-3">Dự án chưa có task nào.</p>
+                            <button
+                                className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg cursor-pointer transition-colors mt-3"
+                                onClick={() =>
+                                    navigate(`/leader/projects/${projectId}/tasks/create`)
+                                }
+                            >
+                                Tạo task đầu tiên
+                            </button>
                         </div>
                     )}
                 </div>
@@ -139,4 +141,4 @@ const MyTasks = () => {
     );
 };
 
-export default MyTasks;
+export default LeaderTaskManager;

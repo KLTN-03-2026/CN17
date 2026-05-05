@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from '../../utils/axiosIntance';
-import { API_PATHS } from '../../utils/apiPaths';
 import { LuUser } from 'react-icons/lu';
 import Modal from '../Modal';
 import AvatarGroup from '../AvatarGroup';
 
-const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
-  const [allUsers, setAllUsers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false); 
+// projectMembers: danh sách member của project 
+// nếu không truyền thì hiện trống
+const SelectUsers = ({ selectedUsers, setSelectedUsers, projectMembers = [] }) => {
+  const [isModalOpen, setIsModalOpen]       = useState(false);
   const [tempSelectedUsers, setTempSelectedUsers] = useState([]);
+  const [search, setSearch]                 = useState("");
 
-  const getAllUsers = async () => {
-    try {
-      const response = await axiosInstance.get(API_PATHS.USERS.GET_ALL_USERS);
-      if (response.data?.length > 0) {
-        setAllUsers(response.data);
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách người dùng", error);
-    }
-  };
+  const filteredUsers = projectMembers.filter(
+    (user) =>
+      user.name?.toLowerCase().includes(search.toLowerCase()) ||
+      user.email?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const toggleUserSelection = (userID) => {
     setTempSelectedUsers((prev) =>
@@ -30,17 +25,19 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
   };
 
   const handleAssign = () => {
-    setSelectedUsers(tempSelectedUsers); 
+    setSelectedUsers(tempSelectedUsers);
     setIsModalOpen(false);
   };
 
-  const selectedUserAvatars = allUsers
-    .filter((user) => tempSelectedUsers.includes(user._id))
-    .map((user) => user.profileImageUrl);
+  const handleOpen = () => {
+    setTempSelectedUsers(selectedUsers || []);
+    setSearch("");
+    setIsModalOpen(true);
+  };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
+  const selectedUserAvatars = projectMembers
+    .filter((user) => selectedUsers.includes(user._id))
+    .map((user) => user.profileImageUrl);
 
   useEffect(() => {
     if (selectedUsers.length === 0) {
@@ -50,59 +47,74 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }) => {
 
   return (
     <div className="space-y-4 mt-2">
-      {selectedUserAvatars.length === 0 && (
-        <button className="card-btn" onClick={() => setIsModalOpen(true)}>
-          <LuUser className="text-sm" /> Add Members
+      {selectedUserAvatars.length === 0 ? (
+        <button className="card-btn" onClick={handleOpen}>
+          <LuUser className="text-sm" /> Chọn thành viên
         </button>
+      ) : (
+        <div className="cursor-pointer" onClick={handleOpen}>
+          <AvatarGroup avatars={selectedUserAvatars} maxVisible={3} />
+        </div>
       )}
-
-    {selectedUserAvatars.length > 0 && (
-      <div className="cursor-pointer" onClick={() => setIsModalOpen(true)}>
-        <AvatarGroup avatars={selectedUserAvatars} maxVisible={3} />
-      </div>
-    )}
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={"Select User"}
+        title="Chọn thành viên"
       >
-        <div className="space-y-4 h-[60vh] overflow-y-auto">
-          {allUsers.map((user) => (
-            <div
-              key={user._id}
-              className="flex items-center gap-4 p-3 border-b border-gray-200"
-            >
-              <img
-                src={user.profileImageUrl}
-                alt={user.name}
-                className="w-10 h-10 rounded-full "
-              />
-              <div className="flex-1">
-                <p className="font-medium text-gray-800 dark:text-white">
-                  {user.name}
-                </p>
-                <p className="text-[13px] text-gray-500">{user.email}</p>
+        {/* Ô tìm kiếm */}
+        <div className="mb-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo tên hoặc email..."
+            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 outline-none focus:border-gray-500 bg-white placeholder:text-gray-400"
+          />
+        </div>
+
+        <div className="space-y-1 h-[50vh] overflow-y-auto">
+          {filteredUsers.length === 0 ? (
+            <p className="text-center text-gray-400 text-sm py-8">
+              {projectMembers.length === 0
+                ? "Dự án chưa có thành viên nào. Hãy mời thành viên trước."
+                : "Không tìm thấy người dùng."}
+            </p>
+          ) : (
+            filteredUsers.map((user) => (
+              <div
+                key={user._id}
+                className="flex items-center gap-4 p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer rounded-lg"
+                onClick={() => toggleUserSelection(user._id)}
+              >
+                <img
+                  src={user.profileImageUrl || ""}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover bg-gray-200"
+                />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800 text-sm">{user.name}</p>
+                  <p className="text-[12px] text-gray-400">{user.email}</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={tempSelectedUsers.includes(user._id)}
+                  onChange={() => toggleUserSelection(user._id)}
+                  className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none"
+                />
               </div>
+            ))
+          )}
+        </div>
 
-              <input
-                type="checkbox"
-                checked={tempSelectedUsers.includes(user._id)}
-                onChange={() => toggleUserSelection(user._id)} 
-                className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none"
-              />
-            </div>
-          ))}
-        </div> 
-
-        <div className="flex justify-end gap-4 pt-4">
-        <button className="card-btn" onClick={() => setIsModalOpen(false)}>
-          CANCEL
-        </button>
-        <button className="card-btn-fill" onClick={handleAssign}>
-          DONE
-        </button>
-      </div>
+        <div className="flex justify-end gap-3 pt-4">
+          <button className="card-btn" onClick={() => setIsModalOpen(false)}>
+            Hủy
+          </button>
+          <button className="card-btn-fill" onClick={handleAssign}>
+            Xác nhận
+          </button>
+        </div>
       </Modal>
     </div>
   );

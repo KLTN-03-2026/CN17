@@ -36,30 +36,27 @@ const ViewTaskDetails = () => {
   };
 
   const updateTodoChecklist = async (index) => {
-   const todoChecklist  = [...task?.todoChecklist];
-   const taskID = id ;
+    const todoChecklist = [...task?.todoChecklist];
+    const taskID = id;
 
-   if (todoChecklist && todoChecklist[index]){
-    todoChecklist [index].completed = !todoChecklist[index].completed;
+    if (todoChecklist && todoChecklist[index]) {
+      todoChecklist[index].completed = !todoChecklist[index].completed;
 
-    try {
-      const response = await axiosInstance.put(
-        API_PATHS.TASKS.UPDATE_TODO_CHECKLIST(taskID),
-        {todoChecklist}
-      );
-      if (response.status === 200){
-        setTask(response.data?.task || task);
-      } else {
-        // tùy chọn hoàn tác trạng thái bật/tắt nếu lệnh gọi API thất bại 
+      try {
+        const response = await axiosInstance.put(
+          API_PATHS.TASKS.UPDATE_TODO_CHECKLIST(taskID),
+          { todoChecklist }
+        );
+        if (response.status === 200) {
+          setTask(response.data?.task || task);
+        } else {
+          todoChecklist[index].completed = !todoChecklist[index].completed;
+        }
+      } catch (error) {
         todoChecklist[index].completed = !todoChecklist[index].completed;
       }
-
-    } catch (error){
-      todoChecklist[index].completed = !todoChecklist[index].completed;
     }
-   }
   };
-
 
   const handleLinkClick = (link) => {
     if (!link) return;
@@ -149,7 +146,6 @@ const ViewTaskDetails = () => {
 
 export default ViewTaskDetails;
 
-
 const InfoBox = ({ label, value }) => (
   <div className="mb-2">
     <label className="text-xs font-medium text-slate-500">{label}</label>
@@ -165,7 +161,9 @@ const TodoCheckList = ({ text, isChecked, onChange }) => (
       onChange={onChange}
       className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded-sm outline-none cursor-pointer"
     />
-    <p className={`text-[13px] text-gray-800 ${isChecked ? 'line-through text-slate-400' : ''}`}>{text}</p>
+    <p className={`text-[13px] text-gray-800 ${isChecked ? 'line-through text-slate-400' : ''}`}>
+      {text}
+    </p>
   </div>
 );
 

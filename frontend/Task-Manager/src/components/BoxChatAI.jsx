@@ -3,6 +3,36 @@ import { useLocation } from "react-router-dom";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+// Parse markdown 
+const parseMarkdown = (text) => {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    // List item: dòng bắt đầu bằng * hoặc - hoặc số.
+    const isListItem = /^[\*\-]\s+/.test(line) || /^\d+\.\s+/.test(line);
+    const content = line.replace(/^[\*\-]\s+/, "").replace(/^\d+\.\s+/, "");
+
+    // Parse bold
+    const parts = content.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
+      if (/^\*\*[^*]+\*\*$/.test(part)) {
+        return <strong key={j}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+
+    if (isListItem) {
+      return (
+        <div key={i} style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
+          <span style={{ color: "#6C5FF5", flexShrink: 0, marginTop: "1px" }}>•</span>
+          <span>{parts}</span>
+        </div>
+      );
+    }
+
+    if (line.trim() === "") return <div key={i} style={{ height: "6px" }} />;
+    return <div key={i}>{parts}</div>;
+  });
+};
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
@@ -96,9 +126,8 @@ const styles = `
     padding: 10px 14px;
     border-radius: 16px;
     font-size: 13.5px;
-    line-height: 1.55;
+    line-height: 1.6;
     word-break: break-word;
-    white-space: pre-wrap;
   }
   .gcb-msg.user {
     align-self: flex-end;
@@ -199,7 +228,6 @@ export default function BoxChatAI() {
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // Ẩn ở landing page
   if (location.pathname === "/") return null;
 
   useEffect(() => {
@@ -238,7 +266,7 @@ export default function BoxChatAI() {
           messages: [
             {
               role: "system",
-              content: "Bạn là trợ lý AI của ứng dụng Task Manager, hỗ trợ người dùng về quản lý dự án, công việc nhóm và MERN stack. Trả lời ngắn gọn, thân thiện bằng tiếng Việt.",
+              content: "Bạn là FormAI — trợ lý AI hỗ trợ người dùng tạo và quản lý task trong ứng dụng Task Manager. Hãy hướng dẫn người dùng điền thông tin task (tiêu đề, mô tả, độ ưu tiên, ngày hết hạn, checklist...). Trả lời ngắn gọn, thân thiện bằng tiếng Việt. Khi liệt kê, dùng dấu gạch đầu dòng (- item) thay vì dấu *, và dùng **text** cho chữ in đậm.",
             },
             ...history,
             { role: "user", content: text },
@@ -278,8 +306,8 @@ export default function BoxChatAI() {
             <div className="gcb-header">
               <div className="gcb-avatar">✦</div>
               <div className="gcb-header-text">
-                <div className="gcb-header-title">AI Assistant</div>
-                <div className="gcb-header-sub">Powered by Gemini</div>
+                <div className="gcb-header-title">FormAI</div>
+                <div className="gcb-header-sub">Hỗ trợ tạo task</div>
               </div>
               <div className="gcb-online-dot" />
             </div>
@@ -287,12 +315,14 @@ export default function BoxChatAI() {
             <div className="gcb-messages">
               {messages.length === 0 && (
                 <div className="gcb-welcome">
-                  <strong>Xin chào! 👋</strong>
-                  Tôi có thể giúp bạn về quản lý dự án, MERN stack hoặc bất kỳ câu hỏi nào khác.
+                  <strong>Xin chào!</strong>
+                  Tôi là FormAI, hỗ trợ bạn tạo và quản lý task hiệu quả hơn.
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`gcb-msg ${m.role}`}>{m.text}</div>
+                <div key={i} className={`gcb-msg ${m.role}`}>
+                  {m.role === "bot" ? parseMarkdown(m.text) : m.text}
+                </div>
               ))}
               {loading && (
                 <div className="gcb-typing">
@@ -324,7 +354,7 @@ export default function BoxChatAI() {
           </div>
         )}
 
-        <button className="gcb-toggle" onClick={() => setOpen((o) => !o)} title="Chat với AI">
+        <button className="gcb-toggle" onClick={() => setOpen((o) => !o)} title="FormAI">
           {open ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>

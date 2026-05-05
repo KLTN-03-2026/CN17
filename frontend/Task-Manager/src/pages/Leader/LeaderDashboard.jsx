@@ -11,54 +11,60 @@ import InfoCard from "../../components/Cards/InfoCard";
 import CustomPieCharts from "../../components/Charts/CustomPieCharts";
 import CustomBarCharts from "../../components/Charts/CustomBarCharts";
 import TaskListTable from "../../components/layout/TaskListTable";
-import { LuArrowRight, LuFolderOpen, LuBell } from "react-icons/lu";
+import { LuArrowRight, LuFolderOpen } from "react-icons/lu";
 
 const COLORS = ["#8D51FF", "#00B8DB", "#7BCE00"];
 
-const MemberDashboard = () => {
+const LeaderDashboard = () => {
     useUserAuth();
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
 
-    const [projects, setProjects]               = useState([]);
+    const [projects, setProjects]       = useState([]);
     const [selectedProject, setSelectedProject] = useState(null);
     const [dashboardData, setDashboardData]     = useState({});
     const [pieChartData, setPieChartData]       = useState([]);
     const [barChartData, setBarChartData]       = useState([]);
-    const [pendingInvites, setPendingInvites]   = useState(0);
     const [loading, setLoading]                 = useState(false);
 
     const prepareChartData = (charts) => {
-        const dist = charts?.taskDistribution    || {};
-        const prio = charts?.taskPrioritiesLevels || {};
+        const taskDistributionData = charts?.taskDistribution || {};
+        const priorityDistribution = charts?.priorityDistribution || {};
 
         setPieChartData([
-            { status: "pending",     count: dist?.pending    || 0 },
-            { status: "in progress", count: dist?.inprogress || 0 },
-            { status: "completed",   count: dist?.completed  || 0 },
+            { status: "pending",     count: taskDistributionData?.pending     || 0 },
+            { status: "in progress", count: taskDistributionData?.inprogress  || 0 },
+            { status: "completed",   count: taskDistributionData?.completed    || 0 },
         ]);
 
         setBarChartData([
-            { priority: "low",    count: prio?.low    || 0 },
-            { priority: "medium", count: prio?.medium || 0 },
-            { priority: "high",   count: prio?.high   || 0 },
+            { priority: "low",    count: priorityDistribution?.low    || 0 },
+            { priority: "medium", count: priorityDistribution?.medium || 0 },
+            { priority: "high",   count: priorityDistribution?.high   || 0 },
         ]);
     };
 
+    // Lấy danh sách project của leader
     const fetchProjects = async () => {
         try {
             const res = await axiosInstance.get(API_PATHS.PROJECTS.GET_MY_PROJECTS);
-            setProjects(res.data || []);
-            if ((res.data || []).length > 0) setSelectedProject(res.data[0]);
+            const myProjects = (res.data || []).filter(
+                (p) => p.leader?._id === user?._id || p.leader === user?._id
+            );
+            setProjects(myProjects);
+            if (myProjects.length > 0) {
+                setSelectedProject(myProjects[0]);
+            }
         } catch (error) {
-            console.error("Lỗi tải project:", error);
+            console.error("Lỗi tải project", error);
         }
     };
 
+    // Lấy dashboard data theo project
     const fetchDashboardData = async (projectId) => {
         setLoading(true);
         try {
-            const res = await axiosInstance.get(API_PATHS.TASKS.GET_USER_DASHBOARD_DATA, {
+            const res = await axiosInstance.get(API_PATHS.TASKS.GET_DASHBOARD_DATA, {
                 params: { projectId },
             });
             if (res.data) {
@@ -66,25 +72,15 @@ const MemberDashboard = () => {
                 prepareChartData(res.data?.charts || {});
             }
         } catch (error) {
-            console.error("Lỗi tải dashboard:", error);
+            console.error("Lỗi tải dashboard", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchPendingInvites = async () => {
-        try {
-            const res = await axiosInstance.get(API_PATHS.INVITATIONS.GET_MY_INVITATIONS);
-            setPendingInvites((res.data || []).length);
-        } catch (error) {
-            console.error("Lỗi tải lời mời:", error);
-        }
-    };
-
     useEffect(() => {
-        fetchProjects();
-        fetchPendingInvites();
-    }, []);
+        if (user) fetchProjects();
+    }, [user]);
 
     useEffect(() => {
         if (selectedProject) fetchDashboardData(selectedProject._id);
@@ -103,50 +99,35 @@ const MemberDashboard = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Notification lời mời */}
-                        {pendingInvites > 0 && (
-                            <button
-                                className="relative flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
-                                onClick={() => navigate("/user/invitations")}
+                    {/* Project selector */}
+                    {projects.length > 1 && (
+                        <div className="flex items-center gap-2">
+                            <LuFolderOpen className="text-gray-400 shrink-0" />
+                            <select
+                                className="form-input text-sm py-1.5 pr-8"
+                                value={selectedProject?._id || ""}
+                                onChange={(e) => {
+                                    const p = projects.find((p) => p._id === e.target.value);
+                                    setSelectedProject(p);
+                                }}
                             >
-                                <LuBell />
-                                {pendingInvites} lời mời đang chờ
-                                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
-                                    {pendingInvites}
-                                </span>
-                            </button>
-                        )}
-
-                        {/* Project selector */}
-                        {projects.length > 1 && (
-                            <div className="flex items-center gap-2">
-                                <LuFolderOpen className="text-gray-400 shrink-0" />
-                                <select
-                                    className="form-input text-sm py-1.5 pr-8"
-                                    value={selectedProject?._id || ""}
-                                    onChange={(e) => {
-                                        const p = projects.find((p) => p._id === e.target.value);
-                                        setSelectedProject(p);
-                                    }}
-                                >
-                                    {projects.map((p) => (
-                                        <option key={p._id} value={p._id}>{p.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-                    </div>
+                                {projects.map((p) => (
+                                    <option key={p._id} value={p._id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
+                {/* Không có project */}
                 {projects.length === 0 && !loading && (
                     <div className="text-center py-8 text-gray-400">
-                        <p className="text-sm mb-3">Bạn chưa tham gia dự án nào.</p>
+                        <p className="text-sm mb-3">Bạn chưa có dự án nào.</p>
                         <button
                             className="btn-primary"
-                            onClick={() => navigate("/user/invitations")}
+                            onClick={() => navigate("/leader/projects/create")}
                         >
-                            Xem lời mời
+                            Tạo dự án đầu tiên
                         </button>
                     </div>
                 )}
@@ -195,7 +176,9 @@ const MemberDashboard = () => {
                                 <h5 className="text-lg">Recent Tasks</h5>
                                 <button
                                     className="card-btn"
-                                    onClick={() => navigate("/user/tasks")}
+                                    onClick={() =>
+                                        navigate(`/leader/projects/${selectedProject._id}/tasks`)
+                                    }
                                 >
                                     Xem tất cả <LuArrowRight className="text-base" />
                                 </button>
@@ -209,4 +192,4 @@ const MemberDashboard = () => {
     );
 };
 
-export default MemberDashboard;
+export default LeaderDashboard;

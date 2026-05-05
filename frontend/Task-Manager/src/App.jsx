@@ -1,70 +1,88 @@
-import React, { useContext } from 'react'
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+
+import UserProvider from "./context/userContext";
+import PrivateRoute from "./routes/PrivateRoute";
+
+// Public
 import LandingPage from "./pages/LandingPage";
-import BoxChatAI from "./components/BoxChatAI";
-// Auth
-import Login from "./pages/auth/Login";
-import SignUp from "./pages/auth/SignUp";
+import Login       from "./pages/auth/Login";
+import SignUp      from "./pages/auth/SignUp";
 
 // Admin
-import DashBoard from "./pages/Admin/DashBoard";
-import ManagerTask from "./pages/Admin/ManagerTask";
-import CreateTask from "./pages/Admin/CreateTask";
-import ManageUsers from "./pages/Admin/ManageUsers";
+import AdminDashboard from "./pages/Admin/DashBoard";
+import ManageUsers    from "./pages/Admin/ManageUsers";
 
-// User
-import UserDashboard from "./pages/User/UserDashboard";
-import Mytask from "./pages/User/Mytask";
-import TaskDetails from "./pages/User/ViewTaskDetails";
+// Leader
+import LeaderDashboard   from "./pages/Leader/LeaderDashboard";
+import ManageProject     from "./pages/Leader/ManageProject";
+import CreateProject     from "./pages/Leader/CreateProject";
+import LeaderTaskManager from "./pages/Leader/LeaderTaskManager";
+import CreateTask        from "./pages/Leader/CreateTask";
+import InviteMembers     from "./pages/Leader/InviteMembers";
 
-// Routes
-import PrivateRoute from "./routes/PrivateRoute";
-import UserProvider, { UserContext } from './context/userContext';
-import { Toaster } from 'react-hot-toast';
+// Member (folder User)
+import UserDashboard      from "./pages/User/UserDashboard";
+import MyTask             from "./pages/User/Mytask";
+import ViewTaskDetails    from "./pages/User/ViewTaskDetails";
+import MyInvitations      from "./pages/User/MyInvitations";
+import MemberCreateProject from "./pages/User/CreateProject"; // tạo project → lên leader
+
+import Settings    from "./pages/Settings";
+import BoxChatAI from "./components/BoxChatAI";
 
 const App = () => {
-  return (
-    <UserProvider>
-      <>
-        <div>
-          <Router>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
+    return (
+        <UserProvider>
+            <>
+                <Router>
+                    <Routes>
+                        {/* Public */}
+                        <Route path="/"       element={<LandingPage />} />
+                        <Route path="/login"  element={<Login />} />
+                        <Route path="/signup" element={<SignUp />} />
 
-              {/* Admin routes */}
-              <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-                <Route path="/admin/dashboard" element={<DashBoard />} />
-                <Route path="/admin/tasks" element={<ManagerTask />} />
-                <Route path="/admin/create-task" element={<CreateTask />} />
-                <Route path="/admin/users" element={<ManageUsers />} />
-              </Route>
+                        {/* Admin */}
+                        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+                            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                            <Route path="/admin/users"     element={<ManageUsers />} />
+                        </Route>
 
-              {/* User routes */}
-              <Route element={<PrivateRoute allowedRoles={["user"]} />}>
-                <Route path="/user/dashboard" element={<UserDashboard />} />
-                <Route path="/user/tasks" element={<Mytask />} />
-                <Route path="/user/task-details/:id" element={<TaskDetails />} />
-              </Route>
+                        {/* Leader */}
+                        <Route element={<PrivateRoute allowedRoles={["leader"]} />}>
+                            <Route path="/leader/dashboard"                        element={<LeaderDashboard />} />
+                            <Route path="/leader/projects"                         element={<ManageProject />} />
+                            <Route path="/leader/projects/create"                  element={<CreateProject />} />
+                            <Route path="/leader/projects/:projectId/tasks"        element={<LeaderTaskManager />} />
+                            <Route path="/leader/projects/:projectId/tasks/create" element={<CreateTask />} />
+                            <Route path="/leader/projects/:projectId/invite"       element={<InviteMembers />} />
+                        </Route>
 
-              {/* Fallback - redirect unknown routes to landing */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            <BoxChatAI />
-          </Router>
-        </div>
+                        {/* Member */}
+                        <Route element={<PrivateRoute allowedRoles={["member"]} />}>
+                            <Route path="/user/dashboard"      element={<UserDashboard />} />
+                            <Route path="/user/tasks"          element={<MyTask />} />
+                            <Route path="/user/tasks/:id"      element={<ViewTaskDetails />} />
+                            <Route path="/user/invitations"    element={<MyInvitations />} />
+                            <Route path="/user/create-project" element={<MemberCreateProject />} />
+                        </Route>
 
-        <Toaster toastOptions={{
-          className: "",
-          style: {
-            fontSize: "13px"
-          },
-        }} />
-      </>
-    </UserProvider>
-  );
+                        {/* Settings — tất cả role đều truy cập được */}
+                        <Route element={<PrivateRoute allowedRoles={["admin", "leader", "member"]} />}>
+                            <Route path="/settings" element={<Settings />} />
+                        </Route>
+
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                    <BoxChatAI />
+                </Router>
+
+                <Toaster toastOptions={{ style: { fontSize: "13px" } }} />
+            </>
+        </UserProvider>
+    );
 };
 
 export default App;

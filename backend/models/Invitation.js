@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-// Leader tìm kiếm user -> gửi invite -> member accept/decline
+// Leader tìm kiếm user → gửi invite → member accept/decline
 const InvitationSchema = new mongoose.Schema(
     {
         project: {
@@ -32,7 +32,7 @@ const InvitationSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Không cho phép invite cùng 1 người vào cùng 1 project 2 lần
-InvitationSchema.index({ project: 1, toUser: 1 }, { unique: true });
+// Index để query nhanh 
+InvitationSchema.index({ project: 1, toUser: 1 });
 
 module.exports = mongoose.model("Invitation", InvitationSchema);

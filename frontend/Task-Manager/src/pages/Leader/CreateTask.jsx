@@ -62,7 +62,6 @@ const CreateTask = () => {
     };
 
     const createTask = async () => {
-        console.log("projectId:", projectId);
         setLoading(true);
         try {
             const todolist = taskData.todoChecklist?.map((item) => ({

@@ -72,7 +72,7 @@ const DashBoard = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h2 className="text-xl md:text-2xl">
-                            Good Morning! {user?.name}
+                            {getGreeting()}! {user?.name}
                         </h2>
                         <p className="text-xs md:text-[13px] text-gray-400 mt-1.5">
                             {moment().format("dddd, MMMM Do YYYY")}

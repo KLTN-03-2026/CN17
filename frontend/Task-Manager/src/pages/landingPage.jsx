@@ -2,24 +2,74 @@ import { useState, useEffect } from "react";
 import BoxChatAI from "../components/BoxChatAI";
 
 const taskCards = [
-  { id: 1, tag: "MongoDB", color: "#4ECDC4", subtitle: "Database Layer", desc: "Lưu trữ dữ liệu dạng document JSON linh hoạt, hỗ trợ Atlas Cloud, Aggregation Pipeline và Indexing hiệu năng cao." },
-  { id: 2, tag: "Express.js", color: "#7C6EF5", subtitle: "Backend Framework", desc: "Xây dựng RESTful API nhanh chóng với Middleware, Routing linh hoạt, JWT Authentication và Error Handling." },
-  { id: 3, tag: "React.js", color: "#F5A623", subtitle: "Frontend Library", desc: "Xây dựng giao diện hiện đại với Component, Hooks, Context API, React Router và Vite." },
-  { id: 4, tag: "Node.js", color: "#FF6B6B", subtitle: "Runtime Environment", desc: "Môi trường chạy JavaScript phía server, xử lý I/O bất đồng bộ và hệ sinh thái npm khổng lồ." },
+  {
+    id: 1,
+    tag: "MongoDB",
+    color: "#4ECDC4",
+    subtitle: "Database Layer",
+    desc: "Lưu trữ dữ liệu dạng document JSON linh hoạt, hỗ trợ Atlas Cloud, Aggregation Pipeline và Indexing hiệu năng cao.",
+  },
+  {
+    id: 2,
+    tag: "Express.js",
+    color: "#7C6EF5",
+    subtitle: "Backend Framework",
+    desc: "Xây dựng RESTful API nhanh chóng với Middleware, Routing linh hoạt, JWT Authentication và Error Handling.",
+  },
+  {
+    id: 3,
+    tag: "React.js",
+    color: "#F5A623",
+    subtitle: "Frontend Library",
+    desc: "Xây dựng giao diện hiện đại với Component, Hooks, Context API, React Router và Vite.",
+  },
+  {
+    id: 4,
+    tag: "Node.js",
+    color: "#FF6B6B",
+    subtitle: "Runtime Environment",
+    desc: "Môi trường chạy JavaScript phía server, xử lý I/O bất đồng bộ và hệ sinh thái npm khổng lồ.",
+  },
 ];
 
 function TaskCard({ task }) {
   return (
     <div className="task-card">
-      <div className="task-card-header" style={{ marginBottom: "10px" }}>
-        <span className="task-tag" style={{ background: task.color + "22", color: task.color }}>
+      <div
+        className="task-card-header"
+        style={{ marginBottom: "12px" }}
+      >
+        <span
+          className="task-tag"
+          style={{
+            background: task.color + "22",
+            color: task.color,
+          }}
+        >
           {task.tag}
         </span>
       </div>
-      <p style={{ fontSize: "11px", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "8px", fontWeight: 600 }}>
+
+      <p
+        style={{
+          fontSize: "11px",
+          color: "var(--muted)",
+          textTransform: "uppercase",
+          letterSpacing: "1px",
+          marginBottom: "10px",
+          fontWeight: 700,
+        }}
+      >
         {task.subtitle}
       </p>
-      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: "1.6" }}>
+
+      <p
+        style={{
+          fontSize: "15px",
+          color: "rgba(255,255,255,0.72)",
+          lineHeight: "1.8",
+        }}
+      >
         {task.desc}
       </p>
     </div>
@@ -31,8 +81,11 @@ export default function LandingPage() {
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
+
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+
+    return () =>
+      window.removeEventListener("scroll", onScroll);
   }, []);
 
   const handleAuth = (type) => {
@@ -44,17 +97,23 @@ export default function LandingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
 
         :root {
-          --bg: #080810;
-          --surface: #10101A;
-          --surface2: #161622;
-          --border: rgba(255,255,255,0.08);
-          --accent: #6C5FF5;
-          --text: #EEEDF8;
-          --muted: #6B6A82;
-          --radius: 16px;
+          --bg: #070711;
+          --surface: #11111B;
+          --surface2: #151522;
+          --border: rgba(255,255,255,0.07);
+          --accent: #8B7EF8;
+          --text: #F4F2FF;
+          --muted: #7B7A94;
+          --radius: 18px;
           --font: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -62,109 +121,346 @@ export default function LandingPage() {
           background: var(--bg);
           color: var(--text);
           font-family: var(--font);
-          line-height: 1.6;
+          overflow-x: hidden;
         }
+
+        /* ================= NAVBAR ================= */
 
         .nav {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 0 60px; height: 72px;
-          transition: all 0.3s;
-        }
-        .nav.scrolled {
-          background: rgba(8,8,16,0.85);
-          backdrop-filter: blur(20px);
-          box-shadow: 0 1px 0 var(--border);
-        }
-        .nav-actions { display: flex; align-items: center; gap: 12px; }
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
 
-        .btn-auth {
-          height: 42px;
-          padding: 0 24px;
-          border-radius: 12px;
-          font-family: var(--font);
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
+          height: 76px;
+
           display: flex;
           align-items: center;
-          justify-content: center;
-          text-decoration: none;
+          justify-content: space-between;
+
+          padding: 0 70px;
+
+          z-index: 100;
+
+          transition: all 0.3s ease;
         }
-        .btn-login {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid var(--border);
-          color: var(--text);
+
+        .nav.scrolled {
+          background: rgba(7,7,17,0.82);
+
+          backdrop-filter: blur(18px);
+
+          border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        .btn-login:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
-        .btn-register {
-          background: var(--accent);
+
+        .logo {
+          font-size: 20px;
+          font-weight: 800;
+          letter-spacing: -0.6px;
+        }
+
+        .logo span {
+          color: var(--accent);
+        }
+
+        .nav-actions {
+          display: flex;
+          gap: 14px;
+        }
+
+        .btn-auth {
+          height: 46px;
+
+          padding: 0 28px;
+
+          border-radius: 14px;
+
           border: none;
-          color: #fff;
+
+          font-family: var(--font);
+          font-size: 14px;
+          font-weight: 700;
+
+          cursor: pointer;
+
+          transition: all 0.25s ease;
         }
-        .btn-register:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .btn-login {
+          background: rgba(255,255,255,0.04);
+
+          color: #fff;
+
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .btn-login:hover {
+          background: rgba(255,255,255,0.08);
+        }
+
+        .btn-register {
+          background: linear-gradient(
+            135deg,
+            #7B6EF6,
+            #9B8CFF
+          );
+
+          color: white;
+
+          box-shadow:
+            0 12px 28px rgba(123,110,246,0.3);
+        }
+
+        .btn-register:hover {
+          transform: translateY(-2px);
+        }
+
+        /* ================= HERO ================= */
 
         .hero {
           min-height: 100vh;
-          display: flex; align-items: center;
-          padding: 80px 60px 0;
-          position: relative;
-        }
-        .hero-inner {
-          display: grid; grid-template-columns: 1.1fr 0.9fr;
-          gap: 60px; align-items: center;
-          max-width: 1200px; width: 100%; margin: 0 auto;
+
+          display: flex;
+          align-items: center;
+
+          padding: 100px 70px 40px;
         }
 
-        /* ── FIX: font chữ tiếng Việt chuyên nghiệp hơn ── */
-        .hero-title {
-          font-size: clamp(32px, 4vw, 52px);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.3px;
-          margin-bottom: 24px;
+        .hero-inner {
+          width: 100%;
+          max-width: 1280px;
+
+          margin: 0 auto;
+
+          display: grid;
+          grid-template-columns: 1.05fr 0.95fr;
+
+          gap: 70px;
+
+          align-items: center;
         }
-        .accent-text {
-          background: linear-gradient(90deg, #8B7EF8, #B8AEFF);
+
+        /* ================= TITLE ================= */
+
+        .hero-title {
+          font-size: clamp(54px, 6vw, 86px);
+
+          font-weight: 800;
+
+          line-height: 1.03;
+
+          letter-spacing: -3px;
+
+          margin-bottom: 34px;
+
+          text-wrap: balance;
+        }
+
+        .line-1 {
+          display: block;
+
+          color: rgba(255,255,255,0.98);
+        }
+
+        .line-2 {
+          display: block;
+
+          margin-top: 6px;
+
+          background: linear-gradient(
+            90deg,
+            #B3A6FF 0%,
+            #8B7EF8 50%,
+            #D7CFFF 100%
+          );
+
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+
+          filter: drop-shadow(
+            0 0 18px rgba(139,126,248,0.22)
+          );
         }
 
-        .hero-visual {
-          display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        .hero-description {
+          max-width: 560px;
+
+          font-size: 20px;
+
+          line-height: 1.9;
+
+          color: var(--muted);
+
+          margin-bottom: 44px;
         }
+
+        /* ================= LABEL ================= */
+
+        .free-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+
+          padding: 15px 28px;
+
+          border-radius: 999px;
+
+          position: relative;
+
+          overflow: hidden;
+
+          background:
+            linear-gradient(
+              135deg,
+              rgba(139,126,248,0.15),
+              rgba(139,126,248,0.05)
+            );
+
+          border: 1px solid rgba(139,126,248,0.24);
+
+          color: #D4CCFF;
+
+          font-size: 15px;
+          font-weight: 800;
+
+          letter-spacing: 1.4px;
+
+          text-transform: uppercase;
+
+          box-shadow:
+            0 0 40px rgba(139,126,248,0.12),
+            inset 0 0 24px rgba(255,255,255,0.02);
+
+          backdrop-filter: blur(16px);
+        }
+
+        .free-label::before {
+          content: "";
+
+          position: absolute;
+
+          top: 0;
+          left: -140%;
+
+          width: 80%;
+          height: 100%;
+
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,0.18),
+            transparent
+          );
+
+          transform: skewX(-20deg);
+
+          animation: shine 3.4s linear infinite;
+        }
+
+        @keyframes shine {
+          100% {
+            left: 180%;
+          }
+        }
+
+        /* ================= CARDS ================= */
+
+        .hero-visual {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+
+          gap: 20px;
+        }
+
         .task-card {
           background: var(--surface2);
+
           border: 1px solid var(--border);
+
           border-radius: var(--radius);
-          padding: 20px;
+
+          padding: 24px;
+
+          transition: all 0.3s ease;
+        }
+
+        .task-card:hover {
+          transform: translateY(-5px);
+
+          border-color: rgba(255,255,255,0.12);
+
+          box-shadow:
+            0 20px 40px rgba(0,0,0,0.32);
         }
 
         .task-tag {
           display: inline-block;
-          padding: 4px 12px;
-          border-radius: 8px;
+
+          padding: 6px 14px;
+
+          border-radius: 10px;
+
           font-size: 13px;
-          font-weight: 600;
+
+          font-weight: 700;
         }
 
-        @media (max-width: 900px) {
-          .nav { padding: 0 24px; }
-          .hero { padding: 80px 24px 0; }
-          .hero-inner { grid-template-columns: 1fr; text-align: center; }
-          .hero-visual { grid-template-columns: 1fr; }
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 950px) {
+          .nav {
+            padding: 0 24px;
+          }
+
+          .hero {
+            padding: 120px 24px 60px;
+          }
+
+          .hero-inner {
+            grid-template-columns: 1fr;
+
+            text-align: center;
+          }
+
+          .hero-description {
+            margin-left: auto;
+            margin-right: auto;
+          }
+
+          .hero-visual {
+            grid-template-columns: 1fr;
+          }
+
+          .free-label {
+            margin: 0 auto;
+          }
+
+          .hero-title {
+            letter-spacing: -2px;
+          }
         }
       `}</style>
 
       <nav className={`nav${scrolled ? " scrolled" : ""}`}>
-        <div style={{ fontWeight: 800, fontSize: "20px" }}>
-          Task<span style={{ color: "var(--accent)" }}>.</span>Manager
+        <div className="logo">
+          Task<span>.</span>Manager
         </div>
+
         <div className="nav-actions">
-          <button className="btn-auth btn-login" onClick={() => handleAuth("login")}>Đăng nhập</button>
-          <button className="btn-auth btn-register" onClick={() => handleAuth("signup")}>Đăng ký</button>
+          <button
+            className="btn-auth btn-login"
+            onClick={() => handleAuth("login")}
+          >
+            Đăng nhập
+          </button>
+
+          <button
+            className="btn-auth btn-register"
+            onClick={() => handleAuth("signup")}
+          >
+            Đăng ký
+          </button>
         </div>
       </nav>
 
@@ -172,24 +468,32 @@ export default function LandingPage() {
         <div className="hero-inner">
           <div>
             <h1 className="hero-title">
-              Quản lý dự án<br />
-              <span className="accent-text">hiệu quả</span>
+              <span className="line-1">
+                Quản lý dự án
+              </span>
+
+              <span className="line-2">
+                hiệu quả
+              </span>
             </h1>
-            <p style={{ color: "var(--muted)", fontSize: "17px", marginBottom: "40px", maxWidth: "480px", lineHeight: "1.7" }}>
-              Hệ thống điều hành công việc tối ưu cho quy trình phát triển phần mềm và làm việc nhóm hiện đại.
+
+            <p className="hero-description">
+              Hệ thống điều hành công việc tối ưu
+              cho quy trình phát triển phần mềm và
+              làm việc nhóm hiện đại.
             </p>
-            <button
-              className="btn-auth btn-register"
-              style={{ width: "fit-content", height: "50px", padding: "0 36px", fontSize: "15px" }}
-              onClick={() => handleAuth("login")}
-            >
-              Trải nghiệm miễn phí
-            </button>
+
+            <div className="free-label">
+                 Hãy đăng nhập để trải nghiệm miễn phí
+            </div>
           </div>
 
           <div className="hero-visual">
-            {taskCards.map(task => (
-              <TaskCard key={task.id} task={task} />
+            {taskCards.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+              />
             ))}
           </div>
         </div>

@@ -8,7 +8,8 @@ import PrivateRoute from "./routes/PrivateRoute";
 // Public
 import LandingPage from "./pages/LandingPage";
 import Login       from "./pages/auth/Login";
-import SignUp      from "./pages/auth/SignUp";
+import SignUp          from "./pages/auth/SignUp";
+import ForgotPassword  from "./pages/auth/ForgotPassword";
 
 // Admin
 import AdminDashboard from "./pages/Admin/DashBoard";
@@ -27,7 +28,7 @@ import UserDashboard      from "./pages/User/UserDashboard";
 import MyTask             from "./pages/User/Mytask";
 import ViewTaskDetails    from "./pages/User/ViewTaskDetails";
 import MyInvitations      from "./pages/User/MyInvitations";
-import MemberCreateProject from "./pages/User/CreateProject"; // tạo project → lên leader
+import MemberCreateProject from "./pages/User/CreateProject"; // tạo project -> lên leader
 
 import Settings    from "./pages/Settings";
 import BoxChatAI from "./components/BoxChatAI";
@@ -41,7 +42,8 @@ const App = () => {
                         {/* Public */}
                         <Route path="/"       element={<LandingPage />} />
                         <Route path="/login"  element={<Login />} />
-                        <Route path="/signup" element={<SignUp />} />
+                        <Route path="/signup"          element={<SignUp />} />
+                        <Route path="/forgot-password"  element={<ForgotPassword />} />
 
                         {/* Admin */}
                         <Route element={<PrivateRoute allowedRoles={["admin"]} />}>

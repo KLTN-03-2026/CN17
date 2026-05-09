@@ -2,8 +2,8 @@ const Invitation = require("../models/Invitation");
 const Project    = require("../models/Project");
 const User       = require("../models/User");
 
-// Leader tìm kiếm user để mời 
-// GET /api/invitations/search?email
+// ─── Leader tìm kiếm user để mời ─────────────────────────────────────────────
+// GET /api/invitations/search?email=xxx
 const searchUsers = async (req, res) => {
     try {
         const { email } = req.query;
@@ -12,7 +12,7 @@ const searchUsers = async (req, res) => {
             return res.status(400).json({ message: "Vui lòng nhập email để tìm kiếm" });
         }
 
-        // Tìm user theo email 
+        // Tìm user theo email (không trả về password, không trả về admin)
         const users = await User.find({
             email: { $regex: email, $options: "i" },
             role: { $ne: "admin" },
@@ -25,7 +25,7 @@ const searchUsers = async (req, res) => {
     }
 };
 
-// Leader gửi lời mời 
+// ─── Leader gửi lời mời ───────────────────────────────────────────────────────
 // POST /api/invitations
 // body: { projectId, toUserId }
 const sendInvitation = async (req, res) => {
@@ -53,20 +53,35 @@ const sendInvitation = async (req, res) => {
             return res.status(400).json({ message: "Người dùng đã là thành viên của project" });
         }
 
-        // Kiểm tra đã có invite pending chưa 
+        // Kiểm tra đã có invite chưa
         const existing = await Invitation.findOne({
             project: projectId,
-            toUser: toUserId,
-            status: "pending",
+            toUser:  toUserId,
         });
+
         if (existing) {
-            return res.status(400).json({ message: "Đã gửi lời mời cho người này rồi" });
+            if (existing.status === "pending") {
+                return res.status(400).json({ message: "Đã gửi lời mời cho người này rồi" });
+            }
+            if (existing.status === "accepted") {
+                return res.status(400).json({ message: "Người dùng đã là thành viên của project" });
+            }
+            // status === "declined" → reset lại để mời lại
+            existing.status   = "pending";
+            existing.fromUser = req.user._id;
+            await existing.save();
+            await existing.populate([
+                { path: "project",  select: "name" },
+                { path: "fromUser", select: "name email profileImageUrl" },
+                { path: "toUser",   select: "name email profileImageUrl" },
+            ]);
+            return res.status(201).json(existing);
         }
 
         const invitation = await Invitation.create({
-            project: projectId,
+            project:  projectId,
             fromUser: req.user._id,
-            toUser: toUserId,
+            toUser:   toUserId,
         });
 
         await invitation.populate([
@@ -81,7 +96,7 @@ const sendInvitation = async (req, res) => {
     }
 };
 
-// Member xem danh sách lời mời đang chờ
+// ─── Member xem danh sách lời mời đang chờ ───────────────────────────────────
 // GET /api/invitations/my
 const getMyInvitations = async (req, res) => {
     try {
@@ -99,7 +114,7 @@ const getMyInvitations = async (req, res) => {
     }
 };
 
-// Member chấp nhận lời mời
+// ─── Member chấp nhận lời mời ─────────────────────────────────────────────────
 // PATCH /api/invitations/:id/accept
 const acceptInvitation = async (req, res) => {
     try {
@@ -133,7 +148,7 @@ const acceptInvitation = async (req, res) => {
     }
 };
 
-// Member từ chối lời mời
+// ─── Member từ chối lời mời ───────────────────────────────────────────────────
 // PATCH /api/invitations/:id/decline
 const declineInvitation = async (req, res) => {
     try {
@@ -160,7 +175,7 @@ const declineInvitation = async (req, res) => {
     }
 };
 
-// Leader xem danh sách invite đã gửi cho 1 project
+// ─── Leader xem danh sách invite đã gửi cho 1 project ────────────────────────
 // GET /api/invitations/project/:projectId
 const getProjectInvitations = async (req, res) => {
     try {

@@ -35,12 +35,17 @@ const getTasks = async (req, res) => {
 
         const projectObjId = new mongoose.Types.ObjectId(projectId);
         let filter = { project: projectObjId };
-        const aggregateFilter = { project: projectObjId };
 
         // Member chỉ xem task được giao cho mình
         // Leader xem tất cả task trong project
         if (!isLeader) {
             filter.assignedTo = req.user._id;
+        }
+
+        // aggregateFilter phải khớp với filter để summary đúng
+        const aggregateFilter = { ...filter };
+        if (aggregateFilter.assignedTo) {
+            aggregateFilter.assignedTo = new mongoose.Types.ObjectId(aggregateFilter.assignedTo);
         }
 
         if (status && status.trim() !== "") {
@@ -148,6 +153,17 @@ const createTask = async (req, res) => {
             });
         }
 
+        // Validate dueDate không được là ngày quá khứ
+        if (dueDate) {
+            const due = new Date(dueDate);
+            due.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (due < today) {
+                return res.status(400).json({ message: "Ngày hết hạn không được là ngày trong quá khứ" });
+            }
+        }
+
         const task = await Task.create({
             title,
             description,
@@ -184,7 +200,18 @@ const updateTask = async (req, res) => {
         task.title       = req.body.title       || task.title;
         task.description = req.body.description || task.description;
         task.priority    = req.body.priority    || task.priority;
-        task.dueDate     = req.body.dueDate     || task.dueDate;
+
+        // Validate dueDate không được là ngày quá khứ
+        if (req.body.dueDate) {
+            const due = new Date(req.body.dueDate);
+            due.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (due < today) {
+                return res.status(400).json({ message: "Ngày hết hạn không được là ngày trong quá khứ" });
+            }
+            task.dueDate = req.body.dueDate;
+        }
         task.attachments = req.body.attachments || task.attachments;
         task.todoChecklist = req.body.todoChecklist || task.todoChecklist;
 
@@ -244,6 +271,11 @@ const updateTaskStatus = async (req, res) => {
             return res.status(403).json({ message: "Bạn không có quyền cập nhật trạng thái của task này" });
         }
 
+        // Task quá hạn - chỉ leader mới được thay đổi
+        if (task.status === "overdue" && !isLeader) {
+            return res.status(403).json({ message: "Task đã quá hạn, chỉ leader mới có thể thay đổi" });
+        }
+
         task.status = req.body.status || task.status;
 
         if (task.status === "completed") {
@@ -277,6 +309,11 @@ const updateTaskChecklist = async (req, res) => {
 
         if (!isLeader && !isAssigned) {
             return res.status(403).json({ message: "Bạn không có quyền cập nhật checklist của task này" });
+        }
+
+        // Task quá hạn - chỉ leader mới được cập nhật checklist
+        if (task.status === "overdue" && !isLeader) {
+            return res.status(403).json({ message: "Task đã quá hạn, chỉ leader mới có thể thay đổi" });
         }
 
         task.todoChecklist = todoChecklist;

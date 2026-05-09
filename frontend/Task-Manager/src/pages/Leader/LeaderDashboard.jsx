@@ -15,6 +15,13 @@ import { LuArrowRight, LuFolderOpen } from "react-icons/lu";
 
 const COLORS = ["#8D51FF", "#00B8DB", "#7BCE00"];
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+};
+
 const LeaderDashboard = () => {
     useUserAuth();
     const { user } = useContext(UserContext);
@@ -92,7 +99,7 @@ const LeaderDashboard = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                         <h2 className="text-xl md:text-2xl">
-                            Good Morning! {user?.name}
+                            {getGreeting()}! {user?.name}
                         </h2>
                         <p className="text-xs md:text-[13px] text-gray-400 mt-1.5">
                             {moment().format("dddd, MMMM Do YYYY")}

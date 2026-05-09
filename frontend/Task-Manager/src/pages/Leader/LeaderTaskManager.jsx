@@ -6,7 +6,7 @@ import axiosInstance from "../../utils/axiosIntance";
 import { API_PATHS } from "../../utils/apiPaths";
 import TaskCard from "../../components/Cards/TaskCard";
 import TaskStatusTabs from "../../components/TaskStatusTabs";
-import { LuPlus } from "react-icons/lu";
+import { LuPlus, LuFileSpreadsheet } from "react-icons/lu";
 import toast from "react-hot-toast";
 
 const LeaderTaskManager = () => {
@@ -85,6 +85,29 @@ const LeaderTaskManager = () => {
                                 setActiveTab={setFilterStatus}
                             />
                         )}
+                        <button
+                            className="flex items-center gap-1.5 text-sm font-medium text-lime-900 bg-lime-100 hover:border-lime-400 px-3 py-2 rounded border border-lime-200 transition-colors"
+                            onClick={async () => {
+                                try {
+                                    const res = await axiosInstance.get(
+                                        API_PATHS.REPORTS.EXPORT_PROJECT_MEMBERS,
+                                        { params: { projectId }, responseType: "blob" }
+                                    );
+                                    const url  = window.URL.createObjectURL(new Blob([res.data]));
+                                    const link = document.createElement("a");
+                                    link.href  = url;
+                                    link.setAttribute("download", `members-report.xlsx`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.parentNode.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                } catch (err) {
+                                    toast.error("Tải báo cáo thất bại");
+                                }
+                            }}
+                        >
+                            <LuFileSpreadsheet className="text-base" /> Báo cáo
+                        </button>
                         <button
                             className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg cursor-pointer transition-colors"
                             onClick={() =>

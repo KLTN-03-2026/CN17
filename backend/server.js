@@ -11,6 +11,7 @@ const projectRoutes    = require("./routes/projectRoutes");
 const invitationRoutes = require("./routes/invitationRoutes");
 
 const path = require("path");
+const { startOverdueCron } = require("./utils/cronJobs");
 const app = express();
 
 app.use(cors({
@@ -22,6 +23,7 @@ app.use(cors({
 app.use(express.json());
 
 connectDB();
+startOverdueCron();
 
 app.use("/api/auth",        authRoutes);
 app.use("/api/reports",     reportRoutes);

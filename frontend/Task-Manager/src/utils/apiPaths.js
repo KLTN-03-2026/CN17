@@ -5,7 +5,8 @@ export const API_PATHS = {
         REGISTER:    "/api/auth/register",
         LOGIN:       "/api/auth/login",
         GET_PROFILE: "/api/auth/profile",
-        UPDATE_PROFILE: "/api/auth/profile",
+        UPDATE_PROFILE:  "/api/auth/profile",
+        RESET_PASSWORD:  "/api/auth/reset-password",
     },
 
     USERS: {
@@ -17,17 +18,17 @@ export const API_PATHS = {
     },
 
     PROJECTS: {
-        GET_MY_PROJECTS:    "/api/projects",                                    // leader + member
-        GET_ALL_PROJECTS:   "/api/projects/all",                                // admin only
+        GET_MY_PROJECTS:    "/api/projects",                                 
+        GET_ALL_PROJECTS:   "/api/projects/all",                               
         GET_PROJECT_BY_ID:  (projectId) => `/api/projects/${projectId}`,
-        CREATE_PROJECT:     "/api/projects",                                    // member → lên leader
+        CREATE_PROJECT:     "/api/projects",                                    
         UPDATE_PROJECT:     (projectId) => `/api/projects/${projectId}`,
         DELETE_PROJECT:     (projectId) => `/api/projects/${projectId}`,
         REMOVE_MEMBER:      (projectId, userId) => `/api/projects/${projectId}/members/${userId}`,
     },
 
     INVITATIONS: {
-        SEARCH_USERS:           "/api/invitations/search",                      // ?email=xxx
+        SEARCH_USERS:           "/api/invitations/search",                  
         SEND_INVITATION:        "/api/invitations",
         GET_MY_INVITATIONS:     "/api/invitations/my",
         ACCEPT_INVITATION:      (id) => `/api/invitations/${id}/accept`,
@@ -36,9 +37,9 @@ export const API_PATHS = {
     },
 
     TASKS: {
-        GET_DASHBOARD_DATA:      "/api/tasks/dashboard-data",       // ?projectId=xxx (leader)
-        GET_USER_DASHBOARD_DATA: "/api/tasks/user-dashboard-data",  // ?projectId=xxx (member)
-        GET_ALL_TASKS:           "/api/tasks",                       // ?projectId=xxx&status=xxx
+        GET_DASHBOARD_DATA:      "/api/tasks/dashboard-data",       
+        GET_USER_DASHBOARD_DATA: "/api/tasks/user-dashboard-data",  
+        GET_ALL_TASKS:           "/api/tasks",                       
         GET_TASK_BY_ID:          (taskId) => `/api/tasks/${taskId}`,
         CREATE_TASK:             "/api/tasks",
         UPDATE_TASK:             (taskId) => `/api/tasks/${taskId}`,
@@ -48,8 +49,9 @@ export const API_PATHS = {
     },
 
     REPORTS: {
-        EXPORT_TASKS: "/api/reports/export/tasks", // ?projectId=xxx
-        EXPORT_USERS: "/api/reports/export/users",
+        EXPORT_TASKS:           "/api/reports/export/tasks",
+        EXPORT_USERS:           "/api/reports/export/users",
+        EXPORT_PROJECT_MEMBERS: "/api/reports/export/project-members",
     },
 
     IMAGE: {

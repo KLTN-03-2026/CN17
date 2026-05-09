@@ -1,4 +1,4 @@
-import React, { use, useContext, useState } from 'react'
+import React, { useContext, useState } from 'react'
 import AuthLayout from '../../components/layout/AuthLayout'
 import { validateEmail } from '../../utils/helper';
 import ProfilePhotoSelector from '../../components/Inputs/ProfilePhotoSelector';
@@ -6,25 +6,23 @@ import Input from '../../components/Inputs/Input';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosIntance';
 import { API_PATHS } from '../../utils/apiPaths';
-import { FaUpload } from 'react-icons/fa6';
 import { UserContext } from '../../context/userContext';
 import uploadImage from '../../utils/uploadImage';
 
 const SignUp = () => {
-  const [profilePic, setProfilePic] = useState(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [adminInviteToken, setAdminInviteToken] = useState('');
+  const [profilePic, setProfilePic]               = useState(null);
+  const [fullName, setFullName]                   = useState("");
+  const [email, setEmail]                         = useState("");
+  const [password, setPassword]                   = useState("");
+  const [adminInviteToken, setAdminInviteToken]   = useState("");
+  const [showTokenField, setShowTokenField]       = useState(false);
+  const [error, setError]                         = useState(null);
 
-  const [error, setError] = useState(null);
-
-  const {updateUser} = useContext(UserContext)
+  const { updateUser } = useContext(UserContext);
   const navigate = useNavigate();
+
   const handleSignup = async (e) => {
     e.preventDefault();
-
-    let profileImageUrl = ''
 
     if (!fullName) {
       setError("Vui lòng nhập đầy đủ họ tên");
@@ -39,41 +37,40 @@ const SignUp = () => {
       return;
     }
     setError("");
-    // signup API call
+
     try {
-      // upload image 
+      let profileImageUrl = "";
       if (profilePic) {
         const imgUploadRes = await uploadImage(profilePic);
         profileImageUrl = imgUploadRes.imageUrl || "";
       }
+
       const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
-      name: fullName ,
-      email,
-      password,
-      profileImageUrl,   
-      adminInviteToken,
-    });
+        name: fullName,
+        email,
+        password,
+        profileImageUrl,
+        adminInviteToken,
+      });
 
-    const {token , role } = response.data;
-    if(token) {
-      localStorage.setItem("token", token) ;
-      updateUser (response.data);
+      const { token, role } = response.data;
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(response.data);
 
-      // redirect based on role
-      if (role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/user/dashboard");
-      } 
-    }  
+        if (role === "admin")       navigate("/admin/dashboard");
+        else if (role === "leader") navigate("/leader/dashboard");
+        else                        navigate("/user/dashboard");
+      }
     } catch (error) {
-      if (error.response && error.response.data.message){
-        setError ( error.response.data.message);
+      if (error.response && error.response.data.message) {
+        setError(error.response.data.message);
       } else {
-        setError ("Có lỗi xảy ra, vui lòng thử lại sau")
+        setError("Có lỗi xảy ra, vui lòng thử lại sau");
       }
     }
   };
+
   return (
     <AuthLayout>
       <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
@@ -81,15 +78,16 @@ const SignUp = () => {
         <p className="text-xs text-slate-700 mt-[5px] mb-6">
           Hãy tham gia cùng chúng tôi bằng cách điền thông tin bên dưới
         </p>
+
         <form onSubmit={handleSignup}>
           <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input  
+            <Input
               value={fullName}
               onChange={({ target }) => setFullName(target.value)}
               label="Full Name"
-              placeholder="tung"
+              placeholder="Nguyễn Văn A"
               type="text"
             />
             <Input
@@ -106,28 +104,42 @@ const SignUp = () => {
               placeholder="Nhập mật khẩu"
               type="password"
             />
-            <Input  
-              value={adminInviteToken}
-              onChange={({ target }) => setAdminInviteToken(target.value)}
-              label="Admin Invite Token"
-              placeholder="Nhập token nhận admin"
-              type="text"
-            />
-            
+
+            {/* Token field — chỉ hiện khi bấm vào link */}
+            {showTokenField ? (
+              <Input
+                value={adminInviteToken}
+                onChange={({ target }) => setAdminInviteToken(target.value)}
+                label="Mã Admin Token"
+                placeholder="Nhập mã token"
+                type="password"
+              />
+            ) : (
+              <div className="flex items-end pb-1">
+                <button
+                  type="button"
+                  className="text-xs text-slate-400 hover:text-primary underline"
+                  onClick={() => setShowTokenField(true)}
+                >
+                  Bạn có mã Admin Token?
+                </button>
+              </div>
+            )}
           </div>
-            {error && (
+
+          {error && (
             <p className="text-red-500 text-xs mt-1 mb-2">{error}</p>
           )}
 
-     
           <button type="submit" className="btn-primary">
             SIGN UP
           </button>
+
           <p className="text-[13px] text-slate-800 mt-3">
-              Bạn đã có tài khoản ? {" "}
-          <Link className="font-medium text-primary underline" to = "/login">
-            Đăng nhập
-          </Link>
+            Bạn đã có tài khoản?{" "}
+            <Link className="font-medium text-primary underline" to="/login">
+              Đăng nhập
+            </Link>
           </p>
         </form>
       </div>

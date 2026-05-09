@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import AuthLayout from "../../components/layout/AuthLayout";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Input from "../../components/Inputs/Input";
 import { validateEmail } from "../../utils/helper";
 import axiosInstance from "../../utils/axiosIntance";
@@ -8,13 +8,17 @@ import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  
-  const {updateUser} = useContext(UserContext);
-  const navigate = useNavigate();
- // handle login form submit
+  const [error, setError]       = useState(null);
+
+  const { updateUser } = useContext(UserContext);
+  const navigate  = useNavigate();
+  const location  = useLocation();
+
+  // Hiện thông báo nếu vừa reset mật khẩu thành công
+  const successMsg = location.state?.message || null;
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -22,39 +26,31 @@ const Login = () => {
       setError("Vui lòng nhập email hợp lệ");
       return;
     }
-
-    if(!password) {
+    if (!password) {
       setError("Vui lòng nhập mật khẩu");
       return;
     }
     setError("");
 
-    // login API call
     try {
-      const response = await axiosInstance.post (API_PATHS.AUTH.LOGIN, {
-        email ,
-        password ,
-      });
-      const { token  , role} = response.data;
-        if (token) {
-          localStorage.setItem("token", token);
-          updateUser(response.data)
-          //redirect based on role
-          if (role === "admin") {
-            navigate("/admin/dashboard");
-        } else {
-          navigate ("/user/dashboard") ;
-        }
+      const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, { email, password });
+      const { token, role } = response.data;
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(response.data);
+        if (role === "admin")       navigate("/admin/dashboard");
+        else if (role === "leader") navigate("/leader/dashboard");
+        else                        navigate("/user/dashboard");
       }
     } catch (error) {
-      if (error.response && error.response.data.message){
-        setError ( error.response.data.message);
-
+      if (error.response && error.response.data.message) {
+        setError(error.response.data.message);
       } else {
-        setError ("Có lỗi xảy ra, vui lòng thử lại sau")
+        setError("Có lỗi xảy ra, vui lòng thử lại sau");
       }
     }
   };
+
   return (
     <AuthLayout>
       <div className="lg:w-[70%] h-3/4 md:h-full flex flex-col justify-center">
@@ -62,6 +58,12 @@ const Login = () => {
         <p className="text-xs text-slate-700 mt-[5px] mb-6">
           Hãy nhập thông tin của bạn để tiến hành đăng nhập
         </p>
+
+        {successMsg && (
+          <p className="text-green-600 text-xs bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4">
+            {successMsg}
+          </p>
+        )}
 
         <form onSubmit={handleLogin}>
           <Input
@@ -77,20 +79,26 @@ const Login = () => {
             label="Password"
             placeholder="Nhập mật khẩu"
             type="password"
-          />     
-          {error && (
-            <p className="text-red-500 text-xs mt-1 mb-2">{error}</p>
-          )}
+          />
 
-     
+          {/* Link quên mật khẩu */}
+          <div className="flex justify-end mb-1">
+            <Link className="text-xs text-primary hover:underline" to="/forgot-password">
+              Quên mật khẩu?
+            </Link>
+          </div>
+
+          {error && <p className="text-red-500 text-xs mt-1 mb-2">{error}</p>}
+
           <button type="submit" className="btn-primary">
             Đăng nhập
           </button>
+
           <p className="text-[13px] text-slate-800 mt-3">
-              Bạn không có tài khoản ? {" "}
-          <Link className="font-medium text-primary underline" to = "/signup">
-            Đăng ký
-          </Link>
+            Bạn không có tài khoản?{" "}
+            <Link className="font-medium text-primary underline" to="/signup">
+              Đăng ký
+            </Link>
           </p>
         </form>
       </div>

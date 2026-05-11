@@ -6,6 +6,7 @@ import { UserContext } from "../../context/userContext";
 import axiosInstance from "../../utils/axiosIntance";
 import { API_PATHS } from "../../utils/apiPaths";
 import moment from "moment";
+import 'moment/locale/vi'; // Import ngôn ngữ tiếng Việt cho moment
 import { addThouSandsSeparator } from "../../utils/helper";
 import InfoCard from "../../components/Cards/InfoCard";
 import CustomPieCharts from "../../components/Charts/CustomPieCharts";
@@ -13,13 +14,17 @@ import CustomBarCharts from "../../components/Charts/CustomBarCharts";
 import TaskListTable from "../../components/layout/TaskListTable";
 import { LuArrowRight, LuFolderOpen, LuBell } from "react-icons/lu";
 
+// Thiết lập moment sử dụng tiếng Việt
+moment.locale('vi');
+
 const COLORS = ["#8D51FF", "#00B8DB", "#7BCE00"];
 
+// Việt hóa lời chào
 const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return "Chào buổi sáng";
+    if (hour < 18) return "Chào buổi chiều";
+    return "Chào buổi tối";
 };
 
 const MemberDashboard = () => {
@@ -39,16 +44,18 @@ const MemberDashboard = () => {
         const dist = charts?.taskDistribution    || {};
         const prio = charts?.taskPrioritiesLevels || {};
 
+        // Chuyển đổi nhãn trạng thái sang tiếng Việt cho Pie Chart
         setPieChartData([
-            { status: "pending",     count: dist?.pending     || dist?.Pending     || 0 },
-            { status: "in progress", count: dist?.inprogress  || dist?.inProgress  || dist?.["in progress"] || 0 },
-            { status: "completed",   count: dist?.completed   || dist?.Completed   || 0 },
+            { status: "Chờ xử lý",    count: dist?.pending     || dist?.Pending     || 0 },
+            { status: "Đang làm",     count: dist?.inprogress  || dist?.inProgress  || dist?.["in progress"] || 0 },
+            { status: "Hoàn thành",   count: dist?.completed   || dist?.Completed   || 0 },
         ]);
 
+        // Chuyển đổi nhãn mức độ ưu tiên sang tiếng Việt cho Bar Chart
         setBarChartData([
-            { priority: "low",    count: prio?.low    || 0 },
-            { priority: "medium", count: prio?.medium || 0 },
-            { priority: "high",   count: prio?.high   || 0 },
+            { priority: "Thấp",    count: prio?.low    || 0 },
+            { priority: "Trung bình", count: prio?.medium || 0 },
+            { priority: "Cao",   count: prio?.high   || 0 },
         ]);
     };
 
@@ -58,7 +65,7 @@ const MemberDashboard = () => {
             setProjects(res.data || []);
             if ((res.data || []).length > 0) setSelectedProject(res.data[0]);
         } catch (error) {
-            console.error("Lỗi tải project:", error);
+            console.error("Lỗi tải dự án:", error);
         }
     };
 
@@ -73,7 +80,7 @@ const MemberDashboard = () => {
                 prepareChartData(res.data?.charts || {});
             }
         } catch (error) {
-            console.error("Lỗi tải dashboard:", error);
+            console.error("Lỗi tải dữ liệu bảng điều khiển:", error);
         } finally {
             setLoading(false);
         }
@@ -105,13 +112,13 @@ const MemberDashboard = () => {
                         <h2 className="text-xl md:text-2xl">
                             {getGreeting()}! {user?.name}
                         </h2>
-                        <p className="text-xs md:text-[13px] text-gray-400 mt-1.5">
-                            {moment().format("dddd, MMMM Do YYYY")}
+                        <p className="text-xs md:text-[13px] text-gray-400 mt-1.5 capitalize">
+                            {moment().format("dddd, [ngày] D [tháng] M, YYYY")}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* Notification lời mời */}
+                        {/* Thông báo lời mời */}
                         {pendingInvites > 0 && (
                             <button
                                 className="relative flex items-center gap-2 text-sm text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
@@ -125,7 +132,7 @@ const MemberDashboard = () => {
                             </button>
                         )}
 
-                        {/* Project selector */}
+                        {/* Bộ chọn dự án */}
                         {projects.length > 1 && (
                             <div className="flex items-center gap-2">
                                 <LuFolderOpen className="text-gray-400 shrink-0" />
@@ -161,22 +168,22 @@ const MemberDashboard = () => {
                 {selectedProject && (
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-5">
                         <InfoCard
-                            label="Total Tasks"
+                            label="Tổng công việc"
                             value={addThouSandsSeparator(dashboardData?.statistics?.totalTasks || 0)}
                             color="bg-primary"
                         />
                         <InfoCard
-                            label="Pending"
+                            label="Chờ xử lý"
                             value={addThouSandsSeparator(dashboardData?.statistics?.pendingTasks || 0)}
                             color="bg-violet-500"
                         />
                         <InfoCard
-                            label="In Progress"
+                            label="Đang làm"
                             value={addThouSandsSeparator(dashboardData?.statistics?.inProgressTasks || 0)}
                             color="bg-cyan-500"
                         />
                         <InfoCard
-                            label="Completed"
+                            label="Hoàn thành"
                             value={addThouSandsSeparator(dashboardData?.statistics?.completedTasks || 0)}
                             color="bg-lime-500"
                         />
@@ -187,21 +194,21 @@ const MemberDashboard = () => {
             {selectedProject && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
                     <div className="card">
-                        <h5 className="font-medium">Task Distribution</h5>
+                        <h5 className="font-medium text-slate-700">Phân bổ công việc</h5>
                         <CustomPieCharts data={pieChartData} colors={COLORS} />
                     </div>
 
                     <div className="card">
-                        <h5 className="font-medium">Task Priority Levels</h5>
+                        <h5 className="font-medium text-slate-700">Mức độ ưu tiên</h5>
                         <CustomBarCharts data={barChartData} colors={COLORS} />
                     </div>
 
                     <div className="md:col-span-2">
                         <div className="card">
-                            <div className="flex items-center justify-between">
-                                <h5 className="text-lg">Recent Tasks</h5>
+                            <div className="flex items-center justify-between mb-4">
+                                <h5 className="text-lg font-medium">Công việc gần đây</h5>
                                 <button
-                                    className="card-btn"
+                                    className="card-btn flex items-center gap-1 text-primary hover:underline text-sm"
                                     onClick={() => navigate("/user/tasks")}
                                 >
                                     Xem tất cả <LuArrowRight className="text-base" />

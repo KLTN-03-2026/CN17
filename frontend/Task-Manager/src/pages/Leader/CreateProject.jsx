@@ -44,7 +44,7 @@ const CreateProject = () => {
                 <div className="form-card max-w-2xl mx-auto">
                     <h2 className="text-xl font-medium mb-1">Tạo dự án mới</h2>
                     <p className="text-xs text-gray-400 mb-6">
-                        Sau khi tạo, bạn sẽ trở thành leader của dự án này
+                        Sau khi tạo, bạn sẽ trở thành quản trị viên (leader) của dự án này
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -70,7 +70,7 @@ const CreateProject = () => {
                                 name="description"
                                 value={form.description}
                                 onChange={handleChange}
-                                placeholder="Mô tả ngắn về dự án..."
+                                placeholder="Nhập mô tả ngắn về dự án..."
                                 rows={4}
                                 className="form-input w-full resize-none"
                             />
@@ -93,7 +93,7 @@ const CreateProject = () => {
                                 disabled={loading}
                                 className="btn-primary flex-1"
                             >
-                                {loading ? "Đang tạo..." : "Tạo dự án"}
+                                {loading ? "Đang xử lý..." : "Tạo dự án"}
                             </button>
                         </div>
                     </form>

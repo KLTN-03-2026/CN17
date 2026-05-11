@@ -2,12 +2,10 @@ const Task    = require("../models/Task");
 const User    = require("../models/User");
 const Project = require("../models/Project");
 
-// @desc    Admin lấy danh sách tất cả user
-// @route   GET /api/users
+// 1. Lấy danh sách tất cả user (Admin)
 const getUsers = async (req, res) => {
     try {
         const users = await User.find({ role: { $ne: "admin" } }).select("-password");
-
         const usersWithStats = await Promise.all(
             users.map(async (user) => {
                 const pendingTasks    = await Task.countDocuments({ assignedTo: user._id, status: "pending" });
@@ -26,15 +24,13 @@ const getUsers = async (req, res) => {
                 };
             })
         );
-
         res.json(usersWithStats);
     } catch (error) {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
 
-// @desc    Lấy thông tin 1 user
-// @route   GET /api/users/:id
+// 2. LẤY CHI TIẾT 1 USER 
 const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select("-password");
@@ -47,16 +43,30 @@ const getUserById = async (req, res) => {
     }
 };
 
-// @desc    Admin cập nhật role của user
-// @route   PUT /api/users/:id
+// 3. Khóa/Mở khóa người dùng
+const toggleUserStatus = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
+        
+        user.status = user.status === "blocked" ? "active" : "blocked";
+        await user.save();
+
+        res.json({ 
+            message: `Tài khoản đã được ${user.status === "active" ? "mở khóa" : "khóa"}`,
+            status: user.status 
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Lỗi server", error: error.message });
+    }
+};
+
+// 4. Cập nhật User
 const updateUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "Người dùng không tồn tại" });
-        }
+        if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
 
-        // Admin chỉ được đổi role (không đổi được password hay email)
         if (req.body.role && ["member", "leader"].includes(req.body.role)) {
             user.role = req.body.role;
         }
@@ -73,17 +83,12 @@ const updateUser = async (req, res) => {
     }
 };
 
-// @desc    Admin xóa user
-// @route   DELETE /api/users/:id
+// 5. Xóa User
 const deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "Người dùng không tồn tại" });
-        }
-        if (user.role === "admin") {
-            return res.status(403).json({ message: "Không thể xóa admin" });
-        }
+        if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
+        if (user.role === "admin") return res.status(403).json({ message: "Không thể xóa admin" });
 
         await user.deleteOne();
         res.json({ message: "Đã xóa người dùng" });
@@ -92,4 +97,11 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, getUserById, updateUser, deleteUser };
+// EXPORT ĐẦY ĐỦ
+module.exports = { 
+    getUsers, 
+    getUserById, 
+    toggleUserStatus, 
+    updateUser, 
+    deleteUser 
+};

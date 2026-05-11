@@ -47,14 +47,16 @@ const LeaderTaskManager = () => {
             setAllTasks(tasksRes.data?.tasks || []);
 
             const summary = summaryRes.data?.summary || {};
+            
+            // Việt hóa nhãn các Tabs cho Leader
             setTabs([
-                { label: "all",         count: summary.all             || 0 },
-                { label: "pending",     count: summary.pendingTasks    || 0 },
-                { label: "in-progress", count: summary.inProgressTasks || 0 },
-                { label: "completed",   count: summary.completedTasks  || 0 },
+                { label: "Tất cả",       value: "all",         count: summary.all             || 0 },
+                { label: "Chờ xử lý",     value: "pending",     count: summary.pendingTasks    || 0 },
+                { label: "Đang làm",     value: "in-progress", count: summary.inProgressTasks || 0 },
+                { label: "Hoàn thành",   value: "completed",   count: summary.completedTasks  || 0 },
             ]);
         } catch (error) {
-            console.error("Lỗi tải task:", error);
+            console.error("Lỗi tải danh sách công việc:", error);
         }
     }, [projectId, filterStatus]);
 
@@ -69,11 +71,11 @@ const LeaderTaskManager = () => {
     return (
         <DashBoardLayout activeMenu="Projects">
             <div className="my-5">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-6">
                     <div>
-                        <h2 className="text-xl font-medium">{project?.name || "Tasks"}</h2>
+                        <h2 className="text-xl font-bold text-slate-800">{project?.name || "Danh sách công việc"}</h2>
                         {project?.description && (
-                            <p className="text-xs text-gray-400 mt-0.5">{project.description}</p>
+                            <p className="text-xs text-gray-500 mt-1 italic">{project.description}</p>
                         )}
                     </div>
 
@@ -85,8 +87,10 @@ const LeaderTaskManager = () => {
                                 setActiveTab={setFilterStatus}
                             />
                         )}
+                        
+                        {/* Nút Xuất Báo Cáo */}
                         <button
-                            className="flex items-center gap-1.5 text-sm font-medium text-lime-900 bg-lime-100 hover:border-lime-400 px-3 py-2 rounded border border-lime-200 transition-colors"
+                            className="flex items-center gap-1.5 text-sm font-medium text-lime-900 bg-lime-100 hover:bg-lime-200 px-3 py-2 rounded border border-lime-200 transition-all active:scale-95"
                             onClick={async () => {
                                 try {
                                     const res = await axiosInstance.get(
@@ -96,25 +100,28 @@ const LeaderTaskManager = () => {
                                     const url  = window.URL.createObjectURL(new Blob([res.data]));
                                     const link = document.createElement("a");
                                     link.href  = url;
-                                    link.setAttribute("download", `members-report.xlsx`);
+                                    link.setAttribute("download", `bao-cao-thanh-vien-${project?.name || 'du-an'}.xlsx`);
                                     document.body.appendChild(link);
                                     link.click();
                                     link.parentNode.removeChild(link);
                                     window.URL.revokeObjectURL(url);
+                                    toast.success("Đã tải xuống báo cáo thành viên");
                                 } catch (err) {
-                                    toast.error("Tải báo cáo thất bại");
+                                    toast.error("Xuất báo cáo thất bại");
                                 }
                             }}
                         >
-                            <LuFileSpreadsheet className="text-base" /> Báo cáo
+                            <LuFileSpreadsheet className="text-base" /> Xuất báo cáo
                         </button>
+
+                        {/* Nút Tạo Task */}
                         <button
-                            className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg cursor-pointer transition-colors"
+                            className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg shadow-md transition-all active:scale-95"
                             onClick={() =>
                                 navigate(`/leader/projects/${projectId}/tasks/create`)
                             }
                         >
-                            <LuPlus /> Tạo Task
+                            <LuPlus className="text-lg" /> Tạo công việc
                         </button>
                     </div>
                 </div>
@@ -146,15 +153,15 @@ const LeaderTaskManager = () => {
                             />
                         ))
                     ) : (
-                        <div className="col-span-3 text-center text-gray-400 mt-10">
-                            <p className="text-sm mb-3">Dự án chưa có task nào.</p>
+                        <div className="col-span-3 text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                            <p className="text-gray-500 font-medium mb-4">Dự án hiện chưa có công việc nào.</p>
                             <button
-                                className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-4 py-2 rounded-lg cursor-pointer transition-colors mt-3"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-white bg-primary hover:bg-blue-700 px-6 py-2.5 rounded-lg transition-all shadow-lg shadow-blue-100"
                                 onClick={() =>
                                     navigate(`/leader/projects/${projectId}/tasks/create`)
                                 }
                             >
-                                Tạo task đầu tiên
+                                <LuPlus /> Tạo công việc đầu tiên
                             </button>
                         </div>
                     )}

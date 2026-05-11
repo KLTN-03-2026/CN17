@@ -1,25 +1,27 @@
+
 export const BASE_URL = "http://localhost:8000";
 
 export const API_PATHS = {
     AUTH: {
-        REGISTER:    "/api/auth/register",
-        LOGIN:       "/api/auth/login",
-        GET_PROFILE: "/api/auth/profile",
+        REGISTER:        "/api/auth/register",
+        LOGIN:           "/api/auth/login",
+        GET_PROFILE:     "/api/auth/profile",
         UPDATE_PROFILE:  "/api/auth/profile",
         RESET_PASSWORD:  "/api/auth/reset-password",
     },
 
     USERS: {
-        GET_ALL_USERS:  "/api/users",
-        GET_USER_BY_ID: (userId) => `/api/users/${userId}`,
-        CREATE_USER:    "/api/users",
-        UPDATE_USER:    (userId) => `/api/users/${userId}`,
-        DELETE_USER:    (userId) => `/api/users/${userId}`,
+        GET_ALL_USERS:   "/api/users",
+        GET_USER_BY_ID:  (userId) => `/api/users/${userId}`,
+        CREATE_USER:     "/api/users",
+        UPDATE_USER:     (userId) => `/api/users/${userId}`,
+        DELETE_USER:     (userId) => `/api/users/${userId}`,
+        TOGGLE_USER_STATUS: (userId) => `/api/users/toggle-status/${userId}`,
     },
 
     PROJECTS: {
-        GET_MY_PROJECTS:    "/api/projects",                                 
-        GET_ALL_PROJECTS:   "/api/projects/all",                               
+        GET_MY_PROJECTS:    "/api/projects",                                
+        GET_ALL_PROJECTS:   "/api/projects/all", // Admin xem tất cả                             
         GET_PROJECT_BY_ID:  (projectId) => `/api/projects/${projectId}`,
         CREATE_PROJECT:     "/api/projects",                                    
         UPDATE_PROJECT:     (projectId) => `/api/projects/${projectId}`,

@@ -10,51 +10,44 @@ const isLeaderOfTask = async (task, userId) => {
 };
 
 // ─── Lấy danh sách task theo project ─────────────────────────────────────────
-// GET /api/tasks?projectId=xxx&status=xxx
-// @access  Member hoặc Leader của project đó
+// GET /api/tasks
 const getTasks = async (req, res) => {
     try {
         const { status, projectId } = req.query;
+        const isAdmin = req.user.role === "admin";
+        let filter = {};
 
-        if (!projectId) {
+        // 1. Xử lý Logic lọc Project
+        if (projectId) {
+            const project = await Project.findById(projectId);
+            if (!project) return res.status(404).json({ message: "Không tìm thấy project" });
+
+            const isLeader = project.leader.toString() === req.user._id.toString();
+            const isMember = project.members.map((id) => id.toString()).includes(req.user._id.toString());
+
+            if (!isAdmin && !isLeader && !isMember) {
+                return res.status(403).json({ message: "Bạn không có quyền truy cập dự án này" });
+            }
+
+            filter.project = new mongoose.Types.ObjectId(projectId);
+            if (!isAdmin && !isLeader) {
+                filter.assignedTo = req.user._id;
+            }
+        } else if (!isAdmin) {
             return res.status(400).json({ message: "Thiếu projectId" });
         }
 
-        // Kiểm tra user có thuộc project không
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ message: "Không tìm thấy project" });
-        }
-
-        const isLeader = project.leader.toString() === req.user._id.toString();
-        const isMember = project.members.map((id) => id.toString()).includes(req.user._id.toString());
-
-        if (!isLeader && !isMember) {
-            return res.status(403).json({ message: "Bạn không thuộc project này" });
-        }
-
-        const projectObjId = new mongoose.Types.ObjectId(projectId);
-        let filter = { project: projectObjId };
-
-        // Member chỉ xem task được giao cho mình
-        // Leader xem tất cả task trong project
-        if (!isLeader) {
-            filter.assignedTo = req.user._id;
-        }
-
-        // aggregateFilter phải khớp với filter để summary đúng
-        const aggregateFilter = { ...filter };
-        if (aggregateFilter.assignedTo) {
-            aggregateFilter.assignedTo = new mongoose.Types.ObjectId(aggregateFilter.assignedTo);
-        }
-
+        // 2. Lọc theo trạng thái
         if (status && status.trim() !== "") {
             filter.status = status;
         }
 
+        // 3. Lấy danh sách Task
         let tasks = await Task.find(filter)
             .populate("assignedTo", "name email profileImageUrl")
             .populate("createdBy", "name email")
+            .populate("project", "name") 
+            .sort({ createdAt: -1 })
             .lean();
 
         const tasksWithCount = tasks.map((task) => {
@@ -64,7 +57,15 @@ const getTasks = async (req, res) => {
             return { ...task, completedChecklistCount: completedCount };
         });
 
-        // Summary stats
+        // 4. Summary stats - Sửa filter để Admin thấy tổng số
+        // Nếu không có projectId, aggregateFilter phải để rỗng để đếm toàn hệ thống
+        const aggregateFilter = projectId ? { project: new mongoose.Types.ObjectId(projectId) } : {};
+        
+        // Nếu là Member thường trong 1 project, chỉ đếm task của họ
+        if (projectId && filter.assignedTo) {
+            aggregateFilter.assignedTo = new mongoose.Types.ObjectId(filter.assignedTo);
+        }
+
         const stats = await Task.aggregate([
             { $match: aggregateFilter },
             {
@@ -181,67 +182,99 @@ const createTask = async (req, res) => {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
-
-// ─── Cập nhật task ────────────────────────────────────────────────────────────
 // PUT /api/tasks/:id
-// @access  Leader của project chứa task đó
+// @access  Admin HOẶC Leader của project chứa task đó
 const updateTask = async (req, res) => {
     try {
-        const task = await Task.findById(req.params.id);
+        const { id } = req.params;
+        const task = await Task.findById(id);
+
         if (!task) {
-            return res.status(404).json({ message: "Task không tồn tại" });
+            return res.status(404).json({ message: "Công việc không tồn tại" });
         }
 
-        const leader = await isLeaderOfTask(task, req.user._id);
-        if (!leader) {
-            return res.status(403).json({ message: "Chỉ leader mới được chỉnh sửa task" });
+        // Kiểm tra quyền: Admin hoặc Leader của project
+        const isAdmin = req.user.role === "admin";
+        const isLeader = await isLeaderOfTask(task, req.user._id);
+
+        if (!isAdmin && !isLeader) {
+            return res.status(403).json({ 
+                message: "Bạn không có quyền chỉnh sửa công việc này. Chỉ Quản trị viên hoặc Trưởng nhóm mới có quyền." 
+            });
         }
 
+        // Cập nhật các trường thông tin cơ bản
         task.title       = req.body.title       || task.title;
         task.description = req.body.description || task.description;
         task.priority    = req.body.priority    || task.priority;
+        task.status      = req.body.status      || task.status; 
 
-        // Validate dueDate không được là ngày quá khứ
+        // Validate và cập nhật dueDate 
         if (req.body.dueDate) {
             const due = new Date(req.body.dueDate);
             due.setHours(0, 0, 0, 0);
+            
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+
             if (due < today) {
-                return res.status(400).json({ message: "Ngày hết hạn không được là ngày trong quá khứ" });
+                return res.status(400).json({ message: "Ngày hết hạn không được ở trong quá khứ" });
             }
             task.dueDate = req.body.dueDate;
         }
-        task.attachments = req.body.attachments || task.attachments;
-        task.todoChecklist = req.body.todoChecklist || task.todoChecklist;
 
+        // Cập nhật danh sách đính kèm và checklist
+        if (req.body.attachments) {
+            task.attachments = req.body.attachments;
+        }
+        
+        if (req.body.todoChecklist) {
+            task.todoChecklist = req.body.todoChecklist;
+            
+            // Tự động tính toán lại progress dựa trên checklist mới
+            const total = req.body.todoChecklist.length;
+            const completed = req.body.todoChecklist.filter(item => item.completed).length;
+            task.progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+        }
+
+        // Cập nhật người được giao 
         if (req.body.assignedTo) {
             if (!Array.isArray(req.body.assignedTo)) {
-                return res.status(400).json({ message: "assignedTo phải là 1 mảng các ID người dùng" });
+                return res.status(400).json({ message: "assignedTo phải là một mảng ID người dùng" });
             }
             task.assignedTo = req.body.assignedTo;
         }
 
         const updatedTask = await task.save();
-        res.json({ message: "Task được cập nhật thành công", updatedTask });
+
+        // Populate lại dữ liệu để trả về Frontend hiển thị luôn
+        const populatedTask = await Task.findById(updatedTask._id)
+            .populate("assignedTo", "name email profileImageUrl")
+            .populate("createdBy", "name email")
+            .populate("project", "name");
+
+        res.json({ 
+            message: "Cập nhật công việc thành công", 
+            task: populatedTask 
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Lỗi server", error: error.message });
+        res.status(500).json({ message: "Lỗi hệ thống khi cập nhật công việc", error: error.message });
     }
 };
-
-// ─── Xóa task ─────────────────────────────────────────────────────────────────
 // DELETE /api/tasks/:id
 // @access  Leader của project chứa task đó
 const deleteTask = async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
-        if (!task) {
-            return res.status(404).json({ message: "Task không tồn tại" });
-        }
+        if (!task) return res.status(404).json({ message: "Task không tồn tại" });
 
+        const isAdmin = req.user.role === "admin";
         const leader = await isLeaderOfTask(task, req.user._id);
-        if (!leader) {
-            return res.status(403).json({ message: "Chỉ leader mới được xóa task" });
+
+        // Admin HOẶC Leader dự án mới được xóa
+        if (!isAdmin && !leader) {
+            return res.status(403).json({ message: "Bạn không có quyền xóa task này" });
         }
 
         await task.deleteOne();
@@ -250,7 +283,6 @@ const deleteTask = async (req, res) => {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
-
 // ─── Cập nhật trạng thái task ─────────────────────────────────────────────────
 // PUT /api/tasks/:id/status
 // @access  Member được giao task hoặc Leader

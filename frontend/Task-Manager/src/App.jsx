@@ -14,13 +14,16 @@ import ForgotPassword  from "./pages/auth/ForgotPassword";
 // Admin
 import AdminDashboard from "./pages/Admin/DashBoard";
 import ManageUsers    from "./pages/Admin/ManageUsers";
+import ManagerTask    from "./pages/Admin/ManagerTask"; // Trang quản lý Task hệ thống
+import ManageAllProjects from "./pages/Admin/ManageAllProjects"; // Trang quản lý Dự án hệ thống (Mới)
+import AdminCreateTask from "./pages/Admin/CreateTask"; // Admin tạo/sửa task
 
 // Leader
 import LeaderDashboard   from "./pages/Leader/LeaderDashboard";
 import ManageProject     from "./pages/Leader/ManageProject";
 import CreateProject     from "./pages/Leader/CreateProject";
 import LeaderTaskManager from "./pages/Leader/LeaderTaskManager";
-import CreateTask        from "./pages/Leader/CreateTask";
+import LeaderCreateTask  from "./pages/Leader/CreateTask";
 import InviteMembers     from "./pages/Leader/InviteMembers";
 
 // Member (folder User)
@@ -49,6 +52,9 @@ const App = () => {
                         <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
                             <Route path="/admin/dashboard" element={<AdminDashboard />} />
                             <Route path="/admin/users"     element={<ManageUsers />} />
+                            <Route path="/admin/tasks"     element={<ManagerTask />} />
+                            <Route path="/admin/all-projects" element={<ManageAllProjects />} />
+                            <Route path="/admin/create-task"  element={<AdminCreateTask />} />
                         </Route>
 
                         {/* Leader */}
@@ -57,7 +63,7 @@ const App = () => {
                             <Route path="/leader/projects"                         element={<ManageProject />} />
                             <Route path="/leader/projects/create"                  element={<CreateProject />} />
                             <Route path="/leader/projects/:projectId/tasks"        element={<LeaderTaskManager />} />
-                            <Route path="/leader/projects/:projectId/tasks/create" element={<CreateTask />} />
+                            <Route path="/leader/projects/:projectId/tasks/create" element={<LeaderCreateTask />} />
                             <Route path="/leader/projects/:projectId/invite"       element={<InviteMembers />} />
                         </Route>
 

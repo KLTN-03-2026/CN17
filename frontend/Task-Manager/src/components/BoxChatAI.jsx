@@ -3,33 +3,38 @@ import { useLocation } from "react-router-dom";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Parse markdown 
+/**
+ * Hàm parse nội dung Markdown và lọc dữ liệu JSON ngầm
+ */
 const parseMarkdown = (text) => {
-  const lines = text.split("\n");
+  // Loại bỏ phần dữ liệu JSON [TASK_DATA] khỏi giao diện chat để người dùng không thấy
+  const cleanText = text.replace(/\[TASK_DATA\]:.*$/s, "").trim();
+  
+  const lines = cleanText.split("\n");
   return lines.map((line, i) => {
-    // List item: dòng bắt đầu bằng * hoặc - hoặc số.
+    // Xử lý List item
     const isListItem = /^[\*\-]\s+/.test(line) || /^\d+\.\s+/.test(line);
     const content = line.replace(/^[\*\-]\s+/, "").replace(/^\d+\.\s+/, "");
 
-    // Parse bold
+    // Xử lý Bold **text**
     const parts = content.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
       if (/^\*\*[^*]+\*\*$/.test(part)) {
-        return <strong key={j}>{part.slice(2, -2)}</strong>;
+        return <strong key={j} style={{ color: "#9B8BFF" }}>{part.slice(2, -2)}</strong>;
       }
       return part;
     });
 
     if (isListItem) {
       return (
-        <div key={i} style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
-          <span style={{ color: "#6C5FF5", flexShrink: 0, marginTop: "1px" }}>•</span>
+        <div key={i} style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
+          <span style={{ color: "#6C5FF5", flexShrink: 0, marginTop: "2px" }}>•</span>
           <span>{parts}</span>
         </div>
       );
     }
 
-    if (line.trim() === "") return <div key={i} style={{ height: "6px" }} />;
-    return <div key={i}>{parts}</div>;
+    if (line.trim() === "") return <div key={i} style={{ height: "8px" }} />;
+    return <div key={i} style={{ marginBottom: "4px" }}>{parts}</div>;
   });
 };
 
@@ -55,11 +60,11 @@ const styles = `
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 24px rgba(108,95,245,0.45);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s ease;
     margin-left: auto;
   }
   .gcb-toggle:hover {
-    transform: scale(1.08);
+    transform: scale(1.08) rotate(5deg);
     box-shadow: 0 6px 32px rgba(108,95,245,0.6);
   }
 
@@ -76,38 +81,39 @@ const styles = `
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-    animation: gcb-pop 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    animation: gcb-pop 0.25s cubic-bezier(0.34,1.56,0.64,1);
     transform-origin: bottom right;
   }
   @keyframes gcb-pop {
-    from { opacity: 0; transform: scale(0.85); }
-    to   { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: scale(0.8) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   .gcb-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 16px 18px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     background: #12121f;
   }
   .gcb-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     background: linear-gradient(135deg, #6C5FF5, #9B8BFF);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 18px;
+    color: white;
   }
   .gcb-header-text { flex: 1; }
-  .gcb-header-title { font-size: 14px; font-weight: 700; color: #EEEDF8; line-height: 1; margin-bottom: 3px; }
+  .gcb-header-title { font-size: 14px; font-weight: 700; color: #EEEDF8; margin-bottom: 2px; }
   .gcb-header-sub { font-size: 11px; color: #6B6A82; }
   .gcb-online-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #4ECDC4; box-shadow: 0 0 6px #4ECDC4;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ECDC4; box-shadow: 0 0 8px #4ECDC4;
   }
 
   .gcb-messages {
@@ -116,17 +122,17 @@ const styles = `
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.08) transparent;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
   }
 
   .gcb-msg {
-    max-width: 82%;
-    padding: 10px 14px;
+    max-width: 85%;
+    padding: 12px 14px;
     border-radius: 16px;
     font-size: 13.5px;
-    line-height: 1.6;
+    line-height: 1.55;
     word-break: break-word;
   }
   .gcb-msg.user {
@@ -146,53 +152,47 @@ const styles = `
   .gcb-typing {
     align-self: flex-start;
     background: #1a1a2e;
-    border: 1px solid rgba(255,255,255,0.06);
     padding: 12px 16px;
     border-radius: 16px;
     border-bottom-left-radius: 4px;
     display: flex;
-    gap: 5px;
-    align-items: center;
+    gap: 4px;
   }
   .gcb-dot {
-    width: 7px; height: 7px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: #6C5FF5;
-    animation: gcb-bounce 1.2s infinite;
+    animation: gcb-bounce 1.4s infinite;
   }
   .gcb-dot:nth-child(2) { animation-delay: 0.2s; }
   .gcb-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes gcb-bounce {
-    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-    40% { transform: translateY(-6px); opacity: 1; }
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+    40% { transform: translateY(-5px); opacity: 1; }
   }
 
   .gcb-footer {
-    padding: 12px 14px;
+    padding: 14px;
     border-top: 1px solid rgba(255,255,255,0.06);
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: flex-end;
     background: #12121f;
   }
   .gcb-input {
     flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 12px;
     padding: 10px 14px;
     color: #EEEDF8;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: inherit;
     font-size: 13.5px;
     resize: none;
     outline: none;
     max-height: 100px;
-    min-height: 40px;
-    line-height: 1.5;
-    transition: border-color 0.2s;
-    scrollbar-width: none;
+    transition: all 0.2s;
   }
-  .gcb-input::placeholder { color: #4a4a62; }
-  .gcb-input:focus { border-color: rgba(108,95,245,0.5); }
+  .gcb-input:focus { border-color: #6C5FF5; background: rgba(255,255,255,0.07); }
 
   .gcb-send {
     width: 40px; height: 40px;
@@ -203,20 +203,19 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s, transform 0.15s;
+    transition: all 0.2s;
     flex-shrink: 0;
   }
-  .gcb-send:hover { opacity: 0.85; transform: scale(1.05); }
-  .gcb-send:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .gcb-send:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+  .gcb-send:disabled { opacity: 0.3; cursor: not-allowed; }
 
   .gcb-welcome {
     text-align: center;
-    padding: 24px 16px 8px;
-    color: #4a4a62;
-    font-size: 12.5px;
-    line-height: 1.6;
+    padding: 20px 10px;
+    color: #6B6A82;
+    font-size: 13px;
   }
-  .gcb-welcome strong { color: #6C5FF5; display: block; font-size: 14px; margin-bottom: 4px; }
+  .gcb-welcome strong { color: #6C5FF5; display: block; margin-bottom: 5px; font-size: 15px; }
 `;
 
 export default function BoxChatAI() {
@@ -228,6 +227,7 @@ export default function BoxChatAI() {
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
 
+  // Không hiển thị ở trang Landing Page
   if (location.pathname === "/") return null;
 
   useEffect(() => {
@@ -266,25 +266,38 @@ export default function BoxChatAI() {
           messages: [
             {
               role: "system",
-              content: "Bạn là FormAI — trợ lý AI hỗ trợ người dùng tạo và quản lý task trong ứng dụng Task Manager. Hãy hướng dẫn người dùng điền thông tin task (tiêu đề, mô tả, độ ưu tiên, ngày hết hạn, checklist...). Trả lời ngắn gọn, thân thiện bằng tiếng Việt. Khi liệt kê, dùng dấu gạch đầu dòng (- item) thay vì dấu *, và dùng **text** cho chữ in đậm.",
+              content: `Bạn là FormAI - Trợ lý thông minh của hệ thống Task Manager.
+              NHIỆM VỤ:
+              1. Thu thập thông tin để tạo Task: tiêu đề (title), mô tả . 
+              2. Nếu thiếu thông tin, hãy hỏi ngắn gọn từng bước một.
+              3. Khi đã có đủ 3 thông tin trên, hãy xác nhận và trả lời dòng cuối cùng ĐÚNG định dạng: [TASK_DATA]: {"title": "...", "priority": "...", "deadline": "..."}
+              4. Tuyệt đối không trả lời các câu hỏi ngoài phạm vi quản lý công việc.`
             },
             ...history,
             { role: "user", content: text },
           ],
+          temperature: 0.5,
         }),
       });
 
       const data = await res.json();
-      const botText =
-        data?.choices?.[0]?.message?.content ||
-        "Xin lỗi, tôi không thể trả lời lúc này.";
+      const botText = data?.choices?.[0]?.message?.content || "Tôi đang gặp sự cố kết nối, hãy thử lại nhé.";
+
+      // Logic xử lý ngầm dữ liệu JSON nếu có
+      if (botText.includes("[TASK_DATA]:")) {
+        const jsonPart = botText.split("[TASK_DATA]:")[1].trim();
+        try {
+          const taskObj = JSON.parse(jsonPart);
+          console.log("FormAI gợi ý dữ liệu Task:", taskObj);
+          // Bạn có thể kích hoạt Event hoặc mở Modal tại đây
+        } catch (e) {
+          console.error("Lỗi parse dữ liệu AI");
+        }
+      }
 
       setMessages((prev) => [...prev, { role: "bot", text: botText }]);
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "bot", text: "Lỗi kết nối. Vui lòng thử lại." },
-      ]);
+      setMessages((prev) => [...prev, { role: "bot", text: "Lỗi hệ thống. Vui lòng kiểm tra API Key." }]);
     } finally {
       setLoading(false);
     }
@@ -306,8 +319,8 @@ export default function BoxChatAI() {
             <div className="gcb-header">
               <div className="gcb-avatar">✦</div>
               <div className="gcb-header-text">
-                <div className="gcb-header-title">FormAI</div>
-                <div className="gcb-header-sub">Hỗ trợ tạo task</div>
+                <div className="gcb-header-title">FormAI Assistant</div>
+                <div className="gcb-header-sub">Sẵn sàng hỗ trợ bạn</div>
               </div>
               <div className="gcb-online-dot" />
             </div>
@@ -315,8 +328,8 @@ export default function BoxChatAI() {
             <div className="gcb-messages">
               {messages.length === 0 && (
                 <div className="gcb-welcome">
-                  <strong>Xin chào!</strong>
-                  Tôi là FormAI, hỗ trợ bạn tạo và quản lý task hiệu quả hơn.
+                  <strong>Chào mừng bạn!</strong>
+                  Tôi có thể giúp bạn tạo task nhanh chóng. Bạn muốn làm gì hôm nay?
                 </div>
               )}
               {messages.map((m, i) => (
@@ -338,7 +351,7 @@ export default function BoxChatAI() {
               <textarea
                 ref={textareaRef}
                 className="gcb-input"
-                placeholder="Nhập tin nhắn... (Enter để gửi)"
+                placeholder="Nhập yêu cầu... (Ví dụ: Tạo task học React)"
                 value={input}
                 onChange={(e) => { setInput(e.target.value); autoResize(e); }}
                 onKeyDown={handleKey}

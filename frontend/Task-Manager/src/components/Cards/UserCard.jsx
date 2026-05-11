@@ -1,3 +1,5 @@
+// Đường dẫn: frontend/src/components/Cards/UserCard.jsx
+
 import React, { useState } from "react";
 import { LuTrash2, LuChevronDown, LuX, LuCalendar, LuMapPin, LuFileText } from "react-icons/lu";
 import axiosInstance from "../../utils/axiosIntance";
@@ -40,12 +42,34 @@ const UserCard = ({ userInfo, onUpdate }) => {
         }
     };
 
+    // Hàm xử lý Khóa/Mở khóa tài khoản
+    const handleToggleStatus = async () => {
+        setLoading(true);
+        try {
+            // Lưu ý: Bạn cần thêm đường dẫn này vào API_PATHS hoặc viết cứng như sau
+            await axiosInstance.patch(`/users/toggle-status/${userInfo._id}`);
+            toast.success(`Tài khoản đã được ${userInfo.status === "blocked" ? "mở khóa" : "khóa"}`);
+            onUpdate?.();
+        } catch (error) {
+            toast.error("Cập nhật trạng thái thất bại");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <>
             <div
-                className="user-card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                className={`user-card p-4 cursor-pointer hover:shadow-md transition-shadow relative ${userInfo.status === "blocked" ? "opacity-70 grayscale-[0.5]" : ""}`}
                 onClick={() => setShowDetail(true)}
             >
+                {/* Badge trạng thái Khóa hiển thị bên ngoài card */}
+                {userInfo.status === "blocked" && (
+                    <div className="absolute top-2 right-12 bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase">
+                        Đã khóa
+                    </div>
+                )}
+
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <img
@@ -72,7 +96,7 @@ const UserCard = ({ userInfo, onUpdate }) => {
                 </div>
 
                 <div className="flex items-center gap-3 mt-4">
-                    <StatCard label="Pending"     count={userInfo?.pendingTasks    || 0} status="Pending" />
+                    <StatCard label="Pending"     count={userInfo?.pendingTasks     || 0} status="Pending" />
                     <StatCard label="In Progress" count={userInfo?.inProgressTasks || 0} status="In Progress" />
                     <StatCard label="Completed"   count={userInfo?.completedTasks  || 0} status="Completed" />
                 </div>
@@ -99,9 +123,16 @@ const UserCard = ({ userInfo, onUpdate }) => {
                                 <div>
                                     <h3 className="font-semibold text-gray-800">{userInfo?.name}</h3>
                                     <p className="text-xs text-gray-400">{userInfo?.email}</p>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize mt-1 inline-block ${ROLE_STYLES[userInfo?.role] || ROLE_STYLES.member}`}>
-                                        {userInfo?.role}
-                                    </span>
+                                    <div className="flex gap-2 mt-1">
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize inline-block ${ROLE_STYLES[userInfo?.role] || ROLE_STYLES.member}`}>
+                                            {userInfo?.role}
+                                        </span>
+                                        {userInfo.status === "blocked" && (
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 font-bold uppercase">
+                                                Tài khoản bị khóa
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             <button
@@ -135,39 +166,52 @@ const UserCard = ({ userInfo, onUpdate }) => {
 
                         {/* Task stats */}
                         <div className="flex gap-2 mb-5">
-                            <StatCard label="Pending"     count={userInfo?.pendingTasks    || 0} status="Pending" />
+                            <StatCard label="Pending"     count={userInfo?.pendingTasks     || 0} status="Pending" />
                             <StatCard label="In Progress" count={userInfo?.inProgressTasks || 0} status="In Progress" />
                             <StatCard label="Completed"   count={userInfo?.completedTasks  || 0} status="Completed" />
                         </div>
 
-                        {/* Đổi role */}
+                        {/* Nhóm nút Hành động (Đổi role & Khóa) */}
                         {userInfo?.role !== "admin" && (
                             <div className="border-t border-gray-100 pt-4">
-                                <p className="text-xs font-medium text-slate-500 mb-2">Đổi role</p>
-                                <div className="flex gap-2">
+                                <p className="text-xs font-medium text-slate-500 mb-2">Hành động quản trị</p>
+                                <div className="grid grid-cols-2 gap-2 mb-2">
                                     {userInfo?.role !== "leader" && (
                                         <button
-                                            className="flex-1 text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 px-3 py-2 rounded-lg hover:bg-violet-100 transition-colors disabled:opacity-50"
+                                            className="text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 px-3 py-2 rounded-lg hover:bg-violet-100 transition-colors disabled:opacity-50"
                                             onClick={() => handleRoleChange("leader")}
                                             disabled={loading}
                                         >
-                                            Lên Leader
+                                            Nâng lên Leader
                                         </button>
                                     )}
                                     {userInfo?.role !== "member" && (
                                         <button
-                                            className="flex-1 text-xs font-medium text-cyan-600 bg-cyan-50 border border-cyan-200 px-3 py-2 rounded-lg hover:bg-cyan-100 transition-colors disabled:opacity-50"
+                                            className="text-xs font-medium text-cyan-600 bg-cyan-50 border border-cyan-200 px-3 py-2 rounded-lg hover:bg-cyan-100 transition-colors disabled:opacity-50"
                                             onClick={() => handleRoleChange("member")}
                                             disabled={loading}
                                         >
-                                            Xuống Member
+                                            Hạ xuống Member
                                         </button>
                                     )}
+                                    {/* Nút Khóa / Mở khóa mới thêm vào */}
                                     <button
-                                        className="flex-1 text-xs font-medium text-red-500 bg-red-50 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
+                                        className={`text-xs font-medium px-3 py-2 rounded-lg transition-colors border disabled:opacity-50 ${
+                                            userInfo.status === "blocked" 
+                                            ? "text-green-600 bg-green-50 border-green-200 hover:bg-green-100" 
+                                            : "text-amber-600 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                                        }`}
+                                        onClick={handleToggleStatus}
+                                        disabled={loading}
+                                    >
+                                        {userInfo.status === "blocked" ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+                                    </button>
+                                    
+                                    <button
+                                        className="text-xs font-medium text-red-500 bg-red-50 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100 transition-colors"
                                         onClick={(e) => { setShowDetail(false); handleDelete(e); }}
                                     >
-                                        Xóa user
+                                        Xóa người dùng
                                     </button>
                                 </div>
                             </div>

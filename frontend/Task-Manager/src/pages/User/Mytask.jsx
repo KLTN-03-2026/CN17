@@ -24,7 +24,7 @@ const MyTasks = () => {
             setProjects(res.data || []);
             if ((res.data || []).length > 0) setSelectedProject(res.data[0]);
         } catch (error) {
-            console.error("Lỗi tải project:", error);
+            console.error("Lỗi tải dự án:", error);
         }
     };
 
@@ -49,14 +49,16 @@ const MyTasks = () => {
             setAllTasks(tasksRes.data?.tasks || []);
 
             const summary = summaryRes.data?.summary || {};
+            
+            // Việt hóa nhãn các Tabs
             setTabs([
-                { label: "all",         count: summary.all             || 0 },
-                { label: "pending",     count: summary.pendingTasks    || 0 },
-                { label: "in-progress", count: summary.inProgressTasks || 0 },
-                { label: "completed",   count: summary.completedTasks  || 0 },
+                { label: "Tất cả",       value: "all",         count: summary.all             || 0 },
+                { label: "Đang chờ",     value: "pending",     count: summary.pendingTasks    || 0 },
+                { label: "Đang làm",     value: "in-progress", count: summary.inProgressTasks || 0 },
+                { label: "Hoàn thành",   value: "completed",   count: summary.completedTasks  || 0 },
             ]);
         } catch (error) {
-            console.error("Lỗi tải task:", error);
+            console.error("Lỗi tải công việc:", error);
         }
     }, [selectedProject, filterStatus]);
 
@@ -72,10 +74,10 @@ const MyTasks = () => {
         <DashBoardLayout activeMenu="My Tasks">
             <div className="my-5">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
-                    <h2 className="text-xl font-medium">My Tasks</h2>
+                    <h2 className="text-xl font-medium">Công việc của tôi</h2>
 
                     <div className="flex items-center gap-3 flex-wrap">
-                        {/* Project selector */}
+                        {/* Bộ chọn dự án */}
                         {projects.length > 1 && (
                             <div className="flex items-center gap-2">
                                 <LuFolderOpen className="text-gray-400 shrink-0 text-sm" />
@@ -129,7 +131,7 @@ const MyTasks = () => {
                     ) : (
                         <div className="col-span-3 text-center text-gray-400 mt-10">
                             {selectedProject
-                                ? "Không có task nào trong dự án này."
+                                ? "Không có công việc nào trong dự án này."
                                 : "Bạn chưa tham gia dự án nào."}
                         </div>
                     )}

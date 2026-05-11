@@ -5,7 +5,11 @@ import axiosInstance from "../../utils/axiosIntance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { LuCheck, LuX, LuInbox } from "react-icons/lu";
 import moment from "moment";
+import 'moment/locale/vi'; // Import ngôn ngữ tiếng Việt cho moment
 import toast from "react-hot-toast";
+
+// Thiết lập moment sử dụng tiếng Việt
+moment.locale('vi');
 
 const MyInvitations = () => {
     useUserAuth();
@@ -18,7 +22,7 @@ const MyInvitations = () => {
             const res = await axiosInstance.get(API_PATHS.INVITATIONS.GET_MY_INVITATIONS);
             setInvitations(res.data || []);
         } catch (error) {
-            toast.error("Không thể tải lời mời");
+            toast.error("Không thể tải danh sách lời mời");
         } finally {
             setLoading(false);
         }
@@ -61,7 +65,7 @@ const MyInvitations = () => {
                     <h2 className="text-xl font-medium">Lời mời tham gia dự án</h2>
                     {invitations.length > 0 && (
                         <span className="text-xs bg-primary text-white px-2.5 py-1 rounded-full font-medium">
-                            {invitations.length} chờ xác nhận
+                            {invitations.length} lời mời mới
                         </span>
                     )}
                 </div>
@@ -73,46 +77,48 @@ const MyInvitations = () => {
                 ) : invitations.length === 0 ? (
                     <div className="card text-center py-16 text-gray-400">
                         <LuInbox className="text-4xl mx-auto mb-3 text-gray-300" />
-                        <p className="text-sm">Không có lời mời nào đang chờ</p>
+                        <p className="text-sm">Hộp thư trống. Không có lời mời nào đang chờ.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {invitations.map((inv) => (
-                            <div key={inv._id} className="card">
+                            <div key={inv._id} className="card border border-gray-100 hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between gap-4">
-                                    {/* Project info */}
+                                    {/* Thông tin dự án */}
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs bg-violet-100 text-violet-600 px-2 py-0.5 rounded font-medium">
+                                            <span className="text-[10px] uppercase tracking-wider bg-violet-100 text-violet-600 px-2 py-0.5 rounded font-bold">
                                                 Dự án
                                             </span>
-                                            <h3 className="font-medium text-gray-800 text-sm">
+                                            <h3 className="font-semibold text-gray-800 text-sm">
                                                 {inv.project?.name}
                                             </h3>
                                         </div>
 
                                         {inv.project?.description && (
-                                            <p className="text-xs text-gray-400 mb-2 line-clamp-2">
-                                                {inv.project.description}
+                                            <p className="text-xs text-gray-500 mb-2 line-clamp-2 italic">
+                                                "{inv.project.description}"
                                             </p>
                                         )}
 
                                         <div className="flex items-center gap-2 mt-2">
-                                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold border border-primary/20">
                                                 {inv.fromUser?.name?.[0]?.toUpperCase()}
                                             </div>
                                             <p className="text-xs text-gray-500">
-                                                <span className="font-medium">{inv.fromUser?.name}</span>
+                                                <span className="font-semibold text-gray-700">{inv.fromUser?.name}</span>
                                                 {" "}đã mời bạn •{" "}
-                                                {moment(inv.createdAt).fromNow()}
+                                                <span className="text-gray-400">
+                                                    {moment(inv.createdAt).fromNow()}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
+                                    {/* Hành động */}
                                     <div className="flex gap-2 shrink-0">
                                         <button
-                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors border border-red-100 disabled:opacity-50"
+                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-white text-gray-600 hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200 hover:border-red-100 disabled:opacity-50"
                                             onClick={() => handleDecline(inv._id)}
                                             disabled={loadingId === inv._id}
                                         >
@@ -120,7 +126,7 @@ const MyInvitations = () => {
                                             Từ chối
                                         </button>
                                         <button
-                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-lime-500 text-white hover:bg-lime-600 transition-colors disabled:opacity-50"
+                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-lime-500 text-white hover:bg-lime-600 shadow-sm shadow-lime-200 transition-colors disabled:opacity-50"
                                             onClick={() => handleAccept(inv._id)}
                                             disabled={loadingId === inv._id}
                                         >

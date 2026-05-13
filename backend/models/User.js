@@ -11,6 +11,12 @@ const UserSchema = new mongoose.Schema(
             enum: ["admin", "member", "leader"],
             default: "member",
         },
+        status: {
+            type: String,
+            enum: ["active", "blocked"],
+            default: "active", 
+        },
+        // ---------------------------------
         dateOfBirth: { type: Date,   default: null },
         hometown:    { type: String, default: null },
         bio:         { type: String, default: null },

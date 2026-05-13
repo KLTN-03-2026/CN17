@@ -6,6 +6,7 @@ import { validateEmail } from "../../utils/helper";
 import axiosInstance from "../../utils/axiosIntance";
 import { API_PATHS } from "../../utils/apiPaths";
 import { UserContext } from "../../context/userContext";
+import toast from "react-hot-toast"; 
 
 const Login = () => {
   const [email, setEmail]       = useState("");
@@ -14,9 +15,8 @@ const Login = () => {
 
   const { updateUser } = useContext(UserContext);
   const navigate  = useNavigate();
-  const location  = useLocation();
+  const location = useLocation();
 
-  // Hiện thông báo nếu vừa reset mật khẩu thành công
   const successMsg = location.state?.message || null;
 
   const handleLogin = async (e) => {
@@ -35,18 +35,31 @@ const Login = () => {
     try {
       const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, { email, password });
       const { token, role } = response.data;
+      
       if (token) {
         localStorage.setItem("token", token);
         updateUser(response.data);
-        if (role === "admin")       navigate("/admin/dashboard");
+        
+        toast.success("Chào mừng bạn trở lại!"); // Thông báo đăng nhập thành công
+        
+        if (role === "admin")      navigate("/admin/dashboard");
         else if (role === "leader") navigate("/leader/dashboard");
         else                        navigate("/user/dashboard");
       }
     } catch (error) {
+
       if (error.response && error.response.data.message) {
-        setError(error.response.data.message);
+        const message = error.response.data.message;
+        setError(message);
+        
+
+        toast.error(message, {
+          duration: 5000, 
+          position: "top-center",
+        });
       } else {
         setError("Có lỗi xảy ra, vui lòng thử lại sau");
+        toast.error("Hệ thống đang bận, thử lại sau nhé bro!");
       }
     }
   };
@@ -81,14 +94,16 @@ const Login = () => {
             type="password"
           />
 
-          {/* Link quên mật khẩu */}
           <div className="flex justify-end mb-1">
             <Link className="text-xs text-primary hover:underline" to="/forgot-password">
               Quên mật khẩu?
             </Link>
           </div>
-
-          {error && <p className="text-red-500 text-xs mt-1 mb-2">{error}</p>}
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-2 mb-3">
+               <p className="text-red-600 text-[11px] font-medium">{error}</p>
+            </div>
+          )}
 
           <button type="submit" className="btn-primary">
             Đăng nhập

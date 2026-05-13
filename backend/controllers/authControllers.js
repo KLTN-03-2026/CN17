@@ -38,15 +38,30 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        // 1. Tìm user theo email
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Email hoặc mật khẩu không đúng" });
 
+        // 2. Kiểm tra mật khẩu
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Email hoặc mật khẩu không đúng" });
 
+        // 3. KIỂM TRA TRẠNG THÁI KHÓA 
+        // Nếu mật khẩu đúng nhưng tài khoản bị 'blocked', trả về lỗi 403
+        if (user.status === "blocked") {
+            return res.status(403).json({ 
+                message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để được hỗ trợ." 
+            });
+        }
+
+        // 4. Nếu mọi thứ ok, trả về token và thông tin user
         res.json({
-            _id: user._id, name: user.name, email: user.email,
-            role: user.role, profileImageUrl: user.profileImageUrl,
+            _id: user._id, 
+            name: user.name, 
+            email: user.email,
+            role: user.role, 
+            profileImageUrl: user.profileImageUrl,
             token: generateToken(user._id),
         });
     } catch (error) {

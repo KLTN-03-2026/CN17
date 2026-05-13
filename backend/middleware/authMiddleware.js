@@ -2,93 +2,115 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Project = require("../models/Project");
 
-// ─── 1. Xác thực token ────────────────────────────────────────────────────────
+// ─── 1. XÁC THỰC TOKEN & KIỂM TRA TRẠNG THÁI KHÓA (KICK-OUT LOGIC) ─────────────
 const protect = async (req, res, next) => {
     try {
         let token = req.headers.authorization;
 
         if (token && token.startsWith("Bearer")) {
             token = token.split(" ")[1];
+            
+            // Giải mã token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await User.findById(decoded.id).select("-password");
+            
+            // Tìm User và loại bỏ password khỏi kết quả
+            const user = await User.findById(decoded.id).select("-password");
+
+            // KIỂM TRA TRẠNG THÁI: Nếu không tìm thấy hoặc bị khóa (blocked)
+            if (!user) {
+                return res.status(401).json({ message: "Người dùng không tồn tại." });
+            }
+
+            if (user.status === "blocked") {
+                return res.status(401).json({ 
+                    message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên." 
+                });
+            }
+
+            // Lưu thông tin user vào request để các hàm sau sử dụng
+            req.user = user;
             next();
         } else {
-            res.status(401).json({ message: "Not authorized, no token" });
+            res.status(401).json({ message: "Không có quyền truy cập, thiếu token." });
         }
     } catch (error) {
-        res.status(401).json({ message: "Token failed", error: error.message });
+        res.status(401).json({ 
+            message: "Phiên đăng nhập hết hạn hoặc Token lỗi.", 
+            error: error.message 
+        });
     }
 };
 
-// ─── 2. Chỉ Admin (xem thống kê, quản lý user) ───────────────────────────────
+// ─── 2. QUYỀN ADMIN (CHỈ QUẢN TRỊ VIÊN) ───────────────────────────────────────
 const adminOnly = (req, res, next) => {
     if (req.user && req.user.role === "admin") {
         next();
     } else {
-        res.status(403).json({ message: "Access denied, admin only" });
+        res.status(403).json({ message: "Quyền truy cập bị từ chối. Chỉ dành cho Admin." });
     }
 };
 
-// ─── 3. Chỉ Leader (global — có role leader) ─────────────────────────────────
-// Dùng cho các route tổng quát cần role leader
+// ─── 3. QUYỀN LEADER (ADMIN CŨNG CÓ QUYỀN NÀY) ───────────────────────────────
 const leaderOnly = (req, res, next) => {
-    if (req.user && req.user.role === "leader") {
+    if (req.user && (req.user.role === "leader" || req.user.role === "admin")) {
         next();
     } else {
-        res.status(403).json({ message: "Access denied, leader only" });
+        res.status(403).json({ message: "Quyền truy cập bị từ chối. Cần quyền Trưởng nhóm." });
     }
 };
 
-// ─── 4. Leader của đúng project đó ───────────────────────────────────────────
-// Dùng cho: tạo task, sửa task, xóa task, gửi invite trong 1 project cụ thể
-// Yêu cầu: req.params.projectId phải có
+// ─── 4. LEADER CỦA DỰ ÁN CỤ THỂ HOẶC ADMIN ───────────────────────────────────
 const leaderOfProject = async (req, res, next) => {
     try {
-        const project = await Project.findById(req.params.projectId);
+        const projectId = req.params.projectId || req.params.id;
+        const project = await Project.findById(projectId);
 
         if (!project) {
-            return res.status(404).json({ message: "Project not found" });
+            return res.status(404).json({ message: "Không tìm thấy dự án." });
         }
 
-        if (project.leader.toString() !== req.user._id.toString()) {
+        const isAdmin = req.user.role === "admin";
+        const isLeader = project.leader.toString() === req.user._id.toString();
+
+        if (!isAdmin && !isLeader) {
             return res.status(403).json({
-                message: "Access denied, you are not the leader of this project",
+                message: "Bạn không phải trưởng nhóm của dự án này hoặc Admin.",
             });
         }
 
-        req.project = project; // đính kèm project vào request để dùng tiếp
+        req.project = project; 
         next();
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Lỗi Server", error: error.message });
     }
 };
 
-// ─── 5. Member của project (đã được accept invite) ───────────────────────────
-// Dùng cho: xem task, cập nhật tiến độ task
-// Yêu cầu: req.params.projectId phải có
+// ─── 5. THÀNH VIÊN CỦA DỰ ÁN HOẶC ADMIN ───────────────────────────────────────
 const memberOfProject = async (req, res, next) => {
     try {
-        const project = await Project.findById(req.params.projectId);
+        const projectId = req.params.projectId || req.params.id;
+        const project = await Project.findById(projectId);
 
         if (!project) {
-            return res.status(404).json({ message: "Project not found" });
+            return res.status(404).json({ message: "Không tìm thấy dự án." });
         }
 
+        const isAdmin = req.user.role === "admin";
         const isLeader = project.leader.toString() === req.user._id.toString();
         const isMember = project.members
             .map((id) => id.toString())
             .includes(req.user._id.toString());
 
-        if (!isLeader && !isMember) {
+        if (!isAdmin && !isLeader && !isMember) {
             return res.status(403).json({
-                message: "Access denied, you are not a member of this project",
+                message: "Bạn không có quyền truy cập vào dự án này.",
             });
         }
 
         req.project = project;
         next();
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: "Lỗi Server", error: error.message });
     }
 };
 

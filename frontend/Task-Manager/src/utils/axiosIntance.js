@@ -9,39 +9,50 @@ const axiosInstance = axios.create({
         Accept         : "application/json"
     } ,
 }) ;
- // request intercreptor
- axiosInstance.interceptors.request.use(
+
+// Request Interceptor: Gửi kèm token trong mỗi yêu cầu
+axiosInstance.interceptors.request.use(
     (config) => {
         const accessToken = localStorage.getItem("token");
         if(accessToken) {
             config.headers.authorization = `Bearer ${accessToken}`;
-
         }
         return config ;
     } ,
-    (error) =>{
+    (error) => {
         return Promise.reject(error);
     }
 );
-    //response intercreptor
+
+// Response Interceptor: Xử lý kết quả trả về và bắt lỗi hệ thống
 axiosInstance.interceptors.response.use(
     (response) => {
         return response ;
     } ,
     (error) => {
-
-    // handle common error globally
-    if (error.response) {
-          if (error.response.status === 401) {
-        // redirect to login page 
-        window.location.href ="/login" ; 
-    }  else if (error.response.status === 500) {
-        console.error("lỗi sever . chúc bạn may mắn lần sau ");
-    }
-    } else if (error.code === "ECONNABORTED"){
-        console.error(" hết thời gian yêu cầu , vui lòng thử lại ");
-    }
-    return Promise.reject (error) ;
+        // Xử lý các lỗi chung toàn hệ thống
+        if (error.response) {
+            // TRƯỜNG HỢP 401: Token hết hạn HOẶC Tài khoản bị Admin khóa 
+            if (error.response.status === 401) {
+                console.warn("Tài khoản bị khóa hoặc phiên đăng nhập hết hạn. Đang đăng xuất...");
+                localStorage.clear();               
+                // Đẩy người dùng về trang login ngay lập tức
+                window.location.href = "/login"; 
+            } 
+            
+            // Lỗi 500
+            else if (error.response.status === 500) {
+                console.error("Lỗi Server. Chúc bạn may mắn lần sau!");
+            }
+        } 
+        
+        // Lỗi Timeout: Mạng yếu hoặc Server quá tải
+        else if (error.code === "ECONNABORTED"){
+            console.error("Hết thời gian yêu cầu, vui lòng thử lại!");
+        }
+        
+        return Promise.reject(error);
     } 
 ); 
-export default axiosInstance ;
+
+export default axiosInstance;

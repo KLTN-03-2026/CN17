@@ -49,18 +49,19 @@ const toggleUserStatus = async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
         
+        // Chuyển đổi trạng thái
         user.status = user.status === "blocked" ? "active" : "blocked";
         await user.save();
 
         res.json({ 
             message: `Tài khoản đã được ${user.status === "active" ? "mở khóa" : "khóa"}`,
-            status: user.status 
+            status: user.status,
+            _id: user._id // Trả về ID để frontend dễ tìm và cập nhật trong mảng
         });
     } catch (error) {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
-
 // 4. Cập nhật User
 const updateUser = async (req, res) => {
     try {

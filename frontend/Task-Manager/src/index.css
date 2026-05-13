@@ -53,3 +53,10 @@
 .user-card {
     @apply bg-white p-4 rounded-xl shadow-md shadow-gray-100 border border-gray-200/50;
 }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}

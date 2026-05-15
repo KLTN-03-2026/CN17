@@ -59,4 +59,19 @@ export const API_PATHS = {
     IMAGE: {
         UPLOAD_IMAGE: "/api/auth/upload-image",
     },
+    NOTIFICATIONS: {
+    CREATE: "/api/notifications",
+
+    GET_ACTIVE_BY_PROJECT: (projectId) =>
+        `/api/notifications/project/${projectId}`,
+
+    GET_MANAGE_BY_PROJECT: (projectId) =>
+        `/api/notifications/project/${projectId}/manage`,
+
+    UPDATE: (notificationId) =>
+        `/api/notifications/${notificationId}`,
+
+    DELETE: (notificationId) =>
+        `/api/notifications/${notificationId}`,
+    },
 };

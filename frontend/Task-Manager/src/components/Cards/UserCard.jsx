@@ -202,7 +202,7 @@ const UserCard = ({ userInfo, onUpdate }) => {
                                         <button 
                                             onClick={handleToggleStatus}
                                             className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                                            disabled={loading}
+                                            disabled={loading}  
                                         >
                                             <LuLockOpen size={18} /> MỞ KHÓA
                                         </button>

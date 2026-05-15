@@ -9,7 +9,7 @@ const userRoutes       = require("./routes/userRoutes");
 const taskRoutes       = require("./routes/taskRoutes");
 const projectRoutes    = require("./routes/projectRoutes");
 const invitationRoutes = require("./routes/invitationRoutes");
-
+const notificationRoutes = require("./routes/notificationRoutes");
 const path = require("path");
 const { startOverdueCron } = require("./utils/cronJobs");
 const app = express();
@@ -31,7 +31,7 @@ app.use("/api/users",       userRoutes);
 app.use("/api/tasks",       taskRoutes);
 app.use("/api/projects",    projectRoutes);
 app.use("/api/invitations", invitationRoutes);
-
+app.use("/api/notifications", notificationRoutes);
 app.use("/upload", express.static(path.join(__dirname, "upload")));
 
 const PORT = process.env.PORT || 5000;

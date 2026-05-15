@@ -495,6 +495,96 @@ const getUserDashboardData = async (req, res) => {
         res.status(500).json({ message: "Lỗi server", error: error.message });
     }
 };
+// ─── Upload file đính kèm cho task ───────────────────────────────────────────
+// POST /api/tasks/:id/upload
+// @access Member được giao task hoặc Leader của project
+const uploadTaskAttachment = async (req, res) => {
+    try {
+        console.log("===== UPLOAD TASK FILE =====");
+        console.log("req.file:", req.file);
+        console.log("taskId:", req.params.id);
+        console.log("user:", req.user);
+
+        const task = await Task.findById(req.params.id);
+
+        if (!task) {
+            return res.status(404).json({ message: "Task không tồn tại" });
+        }
+
+        task.attachments = (task.attachments || []).map((item) => {
+            if (typeof item === "string") {
+                return {
+                    originalName: item,
+                    fileName: item,
+                    fileUrl: item,
+                    fileType: "link",
+                    fileSize: 0,
+                    uploadedBy: req.user._id,
+                };
+            }
+
+            return item;
+        });
+
+        const project = await Project.findById(task.project);
+
+        if (!project) {
+            return res.status(404).json({ message: "Project không tồn tại" });
+        }
+
+        const userId = req.user._id || req.user.id;
+
+        const isLeader =
+            project.leader &&
+            project.leader.toString() === userId.toString();
+
+        const isAssigned = task.assignedTo.some(
+            (userIdItem) => userIdItem.toString() === userId.toString()
+        );
+
+        if (!isLeader && !isAssigned) {
+            return res.status(403).json({
+                message: "Bạn không có quyền upload file cho task này",
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Vui lòng chọn file cần upload",
+            });
+        }
+
+        const fileData = {
+            originalName: req.file.originalname,
+            fileName: req.file.filename,
+            fileUrl: `/upload/tasks/${req.file.filename}`,
+            fileType: req.file.mimetype,
+            fileSize: req.file.size,
+            uploadedBy: userId,
+        };
+
+        task.attachments.push(fileData);
+        await task.save();
+
+        const updatedTask = await Task.findById(task._id)
+            .populate("assignedTo", "name email profileImageUrl")
+            .populate("createdBy", "name email")
+            .populate("attachments.uploadedBy", "name email profileImageUrl");
+
+        return res.status(200).json({
+            message: "Upload file thành công",
+            attachment: fileData,
+            task: updatedTask,
+        });
+    } catch (error) {
+        console.error("UPLOAD TASK ATTACHMENT ERROR:", error);
+
+        return res.status(500).json({
+            message: "Lỗi upload file",
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
     getTasks,
@@ -504,6 +594,7 @@ module.exports = {
     deleteTask,
     updateTaskStatus,
     updateTaskChecklist,
+    uploadTaskAttachment,
     getDashboardData,
     getUserDashboardData,
 };
